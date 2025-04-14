@@ -1,0 +1,165 @@
+.emoji-popover {
+  position: fixed;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  background: white;
+  cursor: default;
+  z-index: 2000;
+  width: fit-content;
+  transition: opacity 0.2s ease;
+
+  .emoji-drag-bar {
+    background: #f1f1f1;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-bottom: 1px solid #ccc;
+    cursor: move;
+    color: #333;
+    user-select: none;
+  }
+}
+
+.compose-modal {
+    position: fixed;
+    bottom: 1rem;
+    right: 1.5rem;
+    width: 420px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  
+    .mensajeNuevo {
+      color: black;
+    }
+  
+    .header {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #ddd;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  
+      .header-actions {
+        display: flex;
+        gap: 0.6rem;
+  
+        svg {
+          font-size: 0.85rem;
+          color: #555;
+          cursor: pointer;
+  
+          &:hover {
+            color: black;
+          }
+        }
+      }
+    }
+  
+    .fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      padding: 0.5rem 1rem;
+  
+      .to-line {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+  
+        input {
+          flex: 1;
+        }
+  
+        .cc-cco-toggle {
+          font-size: 0.8rem;
+          color: #1a73e8;
+          cursor: pointer;
+          font-weight: 500;
+  
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+  
+      input {
+        border: none;
+        border-bottom: 1px solid #eee;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        outline: none;
+      }
+    }
+  
+    textarea {
+      resize: vertical;
+      border: none;
+      outline: none;
+      padding: 1rem;
+      padding-left: 1.5rem;
+      min-height: 120px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+  
+    .footer {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  
+      .send-btn {
+        background: $primary;
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 2rem;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.9rem;
+  
+        &:hover {
+          background: darken($primary, 10%);
+        }
+  
+        &:disabled {
+          opacity: 0.6;
+          cursor: default;
+        }
+      }
+  
+      .footer-icons {
+        display: flex;
+        gap: 0.7rem;
+        color: #777;
+      
+        svg {
+          font-size: 1.2rem;
+          cursor: pointer;
+          transition: color 0.2s ease;
+      
+          &:hover {
+            color: #222;
+          }
+        }
+        .emoji-wrapper {
+            position: relative;
+        }
+    
+        .emoji-popover {
+            position: absolute;
+            bottom: 110%;
+            right: 0;
+            z-index: 20;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+      }
+    }
+  }
+  

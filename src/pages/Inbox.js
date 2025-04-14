@@ -1,48 +1,36 @@
-// src/pages/Inbox.js
 import React, { useState, useEffect } from 'react';
 import MailCard from '../components/MailCard';
-import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
-import InboxToolbar from '../components/InboxToolbar';
+import MailboxLayout from '../layouts/MailboxLayout';
+import api from '../services/api';
+import { useUser } from '../contexts/UserContext';
 
 export default function Inbox() {
+  const { user, loading } = useUser();
   const [mails, setMails] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const mailsPerPage = 50;
+  const [totalMails, setTotalMails] = useState(0);
+  console.log('mails', mails);
   useEffect(() => {
-    const mockMails = [
-      {
-        id: 1,
-        subject: 'Reunión con cliente mañana',
-        body: '<p>No te olvides de los puntos clave...</p>',
-        sender: 'epinotti@fedes.ai',
-        recipients: 'cliente@correo.com',
-        cc: '',
-        date: new Date().toISOString(),
-        state: 'new',
-        user_id: 2,
-        tag_ids: [],
-      },
-      {
-        id: 2,
-        subject: 'Presupuesto aprobado ✅',
-        body: '<p>¡Hola! Aprobamos el presupuesto, avancemos...</p>',
-        sender: 'cliente@empresa.com',
-        recipients: 'epinotti@fedes.ai',
-        cc: '',
-        date: new Date(Date.now() - 86400000).toISOString(),
-        state: 'read',
-        user_id: 2,
-        tag_ids: [],
-      }
-    ];
-    setMails(mockMails);
-  }, []);
+    if (user && user.email) {
+      api.obtenerInbox(user.email, currentPage, mailsPerPage)
+        .then(({ emails, total }) => {
+          setMails(emails);
+          setTotalMails(total);
+          setSelectedIds([]); // Limpiar selección al cambiar página
+        })
+        .catch(console.error);
+    }
+  }, [user, currentPage]);
 
-  const toggleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(mails.map(mail => mail.id));
+  const totalPages = Math.ceil(totalMails / mailsPerPage);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === mails.length) {
+      setSelectedIds([]); // Deselecciono todo
     } else {
-      setSelectedIds([]);
+      setSelectedIds(mails.map(mail => mail.id)); // Selecciono todos
     }
   };
 
@@ -52,17 +40,34 @@ export default function Inbox() {
     );
   };
 
+  const marcarTodosComoLeidos = () => {
+    const updated = mails.map(mail =>
+      selectedIds.includes(mail.id) ? { ...mail, state: 'read' } : mail
+    );
+    setMails(updated);
+    // Aquí luego puedes agregar lógica adicional para informar al backend si lo deseas
+  };
+
+  const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
+  const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
+  const isAnySelected = selectedIds.length > 0;
+
+  if (loading || !user) {
+    return <div>Cargando usuario y correos...</div>;
+  }
+
   return (
-    <div className="inboxContainer">
-      <SearchAndFilters />
-      <InboxToolbar
-        allSelected={selectedIds.length === mails.length}
-        onSelectAll={toggleSelectAll}
-        onMarkAllRead={() => {
-          const updated = mails.map(m => selectedIds.includes(m.id) ? { ...m, state: 'read' } : m);
-          setMails(updated);
-        }}
-      />
+    <MailboxLayout
+      allSelected={isAllSelected}
+      someSelected={isSomeSelected}
+      onSelectAll={toggleSelectAll}
+      onMarkAllRead={marcarTodosComoLeidos}
+      selected={isAnySelected}
+      currentPage={currentPage}
+      totalMails={totalMails}
+      onPrevPage={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+      onNextPage={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+    >
       {mails.map(mail => (
         <MailCard
           key={mail.id}
@@ -71,6 +76,6 @@ export default function Inbox() {
           onToggle={() => toggleSelectOne(mail.id)}
         />
       ))}
-    </div>
+    </MailboxLayout>
   );
 }
