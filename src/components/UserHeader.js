@@ -1,27 +1,34 @@
-// src/components/UserHeader.jsx
 import React from 'react';
 import { useUser } from '../contexts/UserContext';
 
 export default function UserHeader() {
-    const { user } = useUser();
-    
-    if (!user) return null;
+  const { user } = useUser();
 
-    const [nombre, segundoNombre, ...resto] = user.nombre.split(' ');
-    const apellido = resto.join(' ');
-    const inicial = segundoNombre ? ` ${segundoNombre[0]}.` : '';
+  // Validación completa antes de acceder a propiedades
+  if (
+    !user ||
+    typeof user.nombre !== 'string' ||
+    typeof user.imagen_avatar !== 'string'
+  ) {
+    return null;
+  }
 
-    return (
-        <div className="user-header">
-        <article className="contenedorUsuario">
-            <img
-                src={`data:image/jpeg;base64,${user.imagen_avatar}`}
-                alt={user.nombre}
-                className="user-avatar"
-            />
-            <span className="user-name">{`${nombre}${inicial} ${apellido}`}</span>
-        </article>
-        
-        </div>
-    );
+  const partes = user.nombre.trim().split(' ');
+  const nombre = partes[0] || 'Usuario';
+  const segundoNombre = partes[1] || '';
+  const apellido = partes.slice(2).join(' ') || '';
+  const inicial = segundoNombre ? ` ${segundoNombre[0]}.` : '';
+
+  return (
+    <div className="user-header">
+      <article className="contenedorUsuario">
+        <img
+          src={`data:image/jpeg;base64,${user.imagen_avatar}`}
+          alt={user.nombre}
+          className="user-avatar"
+        />
+        <span className="user-name">{`${nombre}${inicial} ${apellido}`}</span>
+      </article>
+    </div>
+  );
 }

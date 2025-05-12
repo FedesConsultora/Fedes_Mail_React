@@ -11,11 +11,15 @@ export default function Inbox() {
   const [currentPage, setCurrentPage] = useState(1);
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
-  console.log('mails', mails);
+  console.log('mails: ', mails);
   useEffect(() => {
-    if (user && user.email) {
-      api.obtenerInbox(user.email, currentPage, mailsPerPage)
-        .then(({ emails, total }) => {
+    if (user?.email) {
+      api
+        .obtenerInbox(user.email, currentPage, mailsPerPage)
+        .then((res) => {
+          const emails = Array.isArray(res?.emails) ? res.emails : [];
+          const total = typeof res?.total === 'number' ? res.total : emails.length;
+
           setMails(emails);
           setTotalMails(total);
           setSelectedIds([]); // Limpiar selección al cambiar página
@@ -28,24 +32,23 @@ export default function Inbox() {
 
   const toggleSelectAll = () => {
     if (selectedIds.length === mails.length) {
-      setSelectedIds([]); // Deselecciono todo
+      setSelectedIds([]);
     } else {
-      setSelectedIds(mails.map(mail => mail.id)); // Selecciono todos
+      setSelectedIds(mails.map((mail) => mail?.id).filter(Boolean));
     }
   };
 
   const toggleSelectOne = (id) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
   const marcarTodosComoLeidos = () => {
-    const updated = mails.map(mail =>
-      selectedIds.includes(mail.id) ? { ...mail, state: 'read' } : mail
+    const updated = mails.map((mail) =>
+      selectedIds.includes(mail?.id) ? { ...mail, state: 'read' } : mail
     );
     setMails(updated);
-    // Aquí luego puedes agregar lógica adicional para informar al backend si lo deseas
   };
 
   const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
@@ -65,17 +68,23 @@ export default function Inbox() {
       selected={isAnySelected}
       currentPage={currentPage}
       totalMails={totalMails}
-      onPrevPage={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-      onNextPage={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+      onPrevPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+      onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
     >
-      {mails.map(mail => (
-        <MailCard
-          key={mail.id}
-          mail={mail}
-          selected={selectedIds.includes(mail.id)}
-          onToggle={() => toggleSelectOne(mail.id)}
-        />
-      ))}
+      {Array.isArray(mails) && mails.length > 0 ? (
+        mails.map((mail) =>
+          mail?.id ? (
+            <MailCard
+              key={mail.id}
+              mail={mail}
+              selected={selectedIds.includes(mail.id)}
+              onToggle={() => toggleSelectOne(mail.id)}
+            />
+          ) : null
+        )
+      ) : (
+        <div className="no-mails">No se encontraron correos.</div>
+      )}
     </MailboxLayout>
   );
 }

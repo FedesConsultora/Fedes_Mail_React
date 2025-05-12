@@ -3,39 +3,25 @@ import { useParams } from 'react-router-dom';
 import EmailToolbar from '../components/EmailToolbar';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
+import api from '../services/api';
 
 export default function EmailDetail() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
   const [event, setEvent] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
-
-  const mail = {
-    subject: 'Canceled event: REU - Depto Diseño @ Wed Apr 2, 2025',
-    body: '<p>Hola Enzo,<br>Este evento fue cancelado.</p>',
-    senderEmail: 'sofia@fedesconsultora.com',
-    senderName: 'Sofía Pietropaoli',
-    recipients: 'Enzo Pinotti <epinotti@fedesconsultora.com>',
-    date: '3 abr 2025, 8:05 a.m.',
-    domain: 'fedesconsultora.com',
-    signedBy: 'google.com',
-    security: 'Encriptación estándar (TLS)',
-    attachments: [
-      {
-        name: 'reunion-agenda.pdf',
-        url: 'https://fedes.ai/media/attachments/reunion-agenda.pdf',
-        size: '134 KB'
-      },
-      {
-        name: 'planos-proyecto.png',
-        url: 'https://fedes.ai/media/attachments/planos-proyecto.png',
-        size: '892 KB'
-      }
-    ]
-  };
+  const [mail, setMail] = useState(null);
+  console.log('mail: ', mail);
+  useEffect(() => {
+    console.log("🪵 param id =", id, typeof id);
+    api.obtenerDetalleCorreo(+id)
+     .then(setMail)
+     .catch(err => console.error("❌ Detalle correo:", err.message));
+  }, [id]);
 
   useEffect(() => {
-    // Mock usuario desde backend
+    if (!mail) return;
+
     setUser({
       name: mail.senderName,
       email: mail.senderEmail,
@@ -45,29 +31,20 @@ export default function EmailDetail() {
       security: mail.security,
     });
 
-    // Fetch evento por asunto (mockeado por ahora)
-    async function fetchEvent() {
-      // const res = await fetch('/api/calendar/events/from_subject', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ subject: mail.subject })
-      // });
-      // const data = await res.json();
-      // setEvent(data[0]);
+    // Mock: en el futuro podrías traer el evento real por asunto
+    setEvent({
+      title: 'REU - Depto Diseño',
+      start: '2025-04-02T11:30:00',
+      end: '2025-04-02T12:00:00',
+      status: 'cancelled',
+      videocall_url: 'https://meet.google.com/xyz-abc-def',
+      location: 'Sala 1 - Oficina Fedes',
+    });
+  }, [mail]);
 
-      // Mock
-      setEvent({
-        title: 'REU - Depto Diseño',
-        start: '2025-04-02T11:30:00',
-        end: '2025-04-02T12:00:00',
-        status: 'cancelled',
-        videocall_url: 'https://meet.google.com/xyz-abc-def',
-        location: 'Sala 1 - Oficina Fedes',
-      });
-    }
-
-    fetchEvent();
-  }, []);
+  if (!mail) {
+    return <div className="inboxContainer">Cargando correo...</div>;
+  }
 
   return (
     <div className="inboxContainer">
@@ -134,33 +111,34 @@ export default function EmailDetail() {
             </div>
           </div>
         )}
-        
+
         <div
           className="email-body"
           dangerouslySetInnerHTML={{ __html: mail.body }}
         />
       </div>
+
       {mail.attachments && mail.attachments.length > 0 && (
-          <div className="email-attachments">
-            <h4>Archivos adjuntos</h4>
-            <div className="attachments-list">
-              {mail.attachments.map((att, idx) => (
-                <a
-                  key={idx}
-                  href={att.url}
-                  download={att.name}
-                  className="attachment-item"
-                >
-                  <div className="attachment-icon">📎</div>
-                  <div className="attachment-info">
-                    <span className="attachment-name">{att.name}</span>
-                    <span className="attachment-size">{att.size}</span>
-                  </div>
-                </a>
-              ))}
-            </div>
+        <div className="email-attachments">
+          <h4>Archivos adjuntos</h4>
+          <div className="attachments-list">
+            {mail.attachments.map((att, idx) => (
+              <a
+                key={idx}
+                href={att.url}
+                download={att.name}
+                className="attachment-item"
+              >
+                <div className="attachment-icon">📎</div>
+                <div className="attachment-info">
+                  <span className="attachment-name">{att.name}</span>
+                  <span className="attachment-size">{att.size}</span>
+                </div>
+              </a>
+            ))}
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

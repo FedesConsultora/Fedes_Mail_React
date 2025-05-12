@@ -1,0 +1,77 @@
+/*  src/pages/Sent.jsx  */
+import React, { useState, useEffect } from 'react';
+import MailCard from '../components/MailCard';
+import MailboxLayout from '../layouts/MailboxLayout';
+import api from '../services/api';
+import { useUser } from '../contexts/UserContext';
+
+export default function Sent() {
+  const { user, loading } = useUser();
+  const [mails, setMails] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const mailsPerPage = 50;
+  const [totalMails, setTotalMails] = useState(0);
+
+  /* --- carga de enviados --- */
+  useEffect(() => {
+    if (!loading) {
+      api
+        .obtenerEnviados(currentPage, mailsPerPage)
+        .then((res) => {
+          setMails(Array.isArray(res?.emails) ? res.emails : []);
+          setTotalMails(typeof res?.total === 'number' ? res.total : 0);
+          setSelectedIds([]);
+        })
+        .catch(console.error);
+    }
+  }, [loading, currentPage]);
+
+  /* --- helpers selección --- */
+  const totalPages = Math.ceil(totalMails / mailsPerPage);
+
+  const toggleSelectAll = () =>
+    setSelectedIds(
+      selectedIds.length === mails.length
+        ? []
+        : mails.map((m) => m.id).filter(Boolean)
+    );
+
+  const toggleSelectOne = (id) =>
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+
+  /* --- render --- */
+  if (loading) return <div>Cargando usuario…</div>;
+
+  return (
+    <MailboxLayout
+      allSelected={selectedIds.length === mails.length && mails.length > 0}
+      someSelected={selectedIds.length > 0 && selectedIds.length < mails.length}
+      onSelectAll={toggleSelectAll}
+      onMarkAllRead={() => {}}             /* opcional: lógica propia */
+      selected={selectedIds.length > 0}
+      currentPage={currentPage}
+      totalMails={totalMails}
+      onPrevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+      onNextPage={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+    >
+      {mails.length > 0 ? (
+        mails.map(
+          (mail) =>
+            mail?.id && (
+              <MailCard
+                key={mail.id}
+                mail={mail}
+                selected={selectedIds.includes(mail.id)}
+                onToggle={() => toggleSelectOne(mail.id)}
+              />
+            )
+        )
+      ) : (
+        <div className="no-mails">No hay correos enviados.</div>
+      )}
+    </MailboxLayout>
+  );
+}

@@ -4,6 +4,7 @@ import MainLayout from '../layouts/MainLayout';
 import Inbox from '../pages/Inbox';
 import EmailDetail from '../pages/EmailDetail';
 import NotFound from '../pages/NotFound';
+import Sent from '../pages/Sent';     
 
 export default function AppRouter() {
   return (
@@ -22,6 +23,14 @@ export default function AppRouter() {
           element={
             <MainLayout>
               <EmailDetail />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/sent"
+          element={
+            <MainLayout>
+              <Sent />                        {/* Página de enviados */}
             </MainLayout>
           }
         />

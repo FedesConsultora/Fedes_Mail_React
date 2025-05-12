@@ -4,41 +4,55 @@ import { IoMdAttach, IoMdHappy, IoMdLink } from 'react-icons/io';
 import { MdOutlineImage, MdOutlineDraw } from 'react-icons/md';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
+import api from '../services/api'; 
 
 export default function ComposeModal({ onClose }) {
+  /* ---------- estado ---------- */
+  const [form, setForm] = useState({ to: '', cc: '', cco: '', subject: '', body: '' });
   const [showCc, setShowCc] = useState(false);
   const [showCco, setShowCco] = useState(false);
-  const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [form, setForm] = useState({ to: '', cc: '', cco: '', subject: '', body: '' });
+  const [sending, setSending] = useState(false);
 
+  /* ---------- emoji drag ---------- */
   const [emojiPosition, setEmojiPosition] = useState(() => {
     const saved = localStorage.getItem('emojiPosition');
     return saved ? JSON.parse(saved) : { x: 300, y: 300 };
   });
-
   const emojiPickerRef = useRef(null);
   const dragOffset = useRef({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
-
   const textareaRef = useRef();
 
+  /* ---------- helpers ---------- */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!form.to || !form.subject) {
-      alert('Por favor completá el campo "Para" y "Asunto"');
+      alert('Por favor completá "Para" y "Asunto"');
       return;
     }
+
     setSending(true);
-    setTimeout(() => {
-      setSending(false);
-      alert('Correo enviado exitosamente ✅');
+
+    const { success, error } = await api.enviarCorreo({
+      to: form.to,
+      subject: form.subject,
+      html: form.body,
+      text: form.body,
+    });
+
+    setSending(false);
+    if (success) {
+      alert('Correo enviado ✅');
       onClose();
-    }, 2000);
+    } else {
+      alert(`Error al enviar: ${error}`);
+    }
   };
+
 
   const handleEmojiSelect = (emoji) => {
     const textarea = textareaRef.current;
