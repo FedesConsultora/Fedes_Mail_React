@@ -156,18 +156,35 @@ const api = {
   },
 
   async obtenerEnviados(page = 1, limit = 50) {
-    if (mock) return { emails: [], total: 0 };      
+  if (mock) return mockEmails;     // o un mock distinto
 
-    const res = await fetch(`${apiBase}/sent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+  try {
+    const url = new URL(`${apiBase}/sent`, window.location.origin);
+    url.searchParams.set('page', page);
+    url.searchParams.set('limit', limit);
+
+    const res = await fetch(url, {
+      method: 'GET',
       credentials,
-      body: JSON.stringify({ page, limit }),
+      headers: { 'Content-Type': 'application/json' }
     });
 
+    if (!res.ok) {
+      throw new Error(`❌ Error HTTP ${res.status} al obtener enviados`);
+    }
+
     const data = await res.json();
-    return data?.result || { emails: [], total: 0 };
+    const { result } = data;
+    return {
+      emails: Array.isArray(result?.emails) ? result.emails : [],
+      total : typeof result?.total === 'number' ? result.total : 0
+    };
+
+  } catch (err) {
+    console.error('🚨 Error en obtenerEnviados:', err);
+    return { emails: [], total: 0 };
   }
+}
 };
 
 export default api;
