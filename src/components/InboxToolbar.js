@@ -14,8 +14,8 @@ export default function InboxToolbar({
   allSelected,
   someSelected,
   onSelectAll,
-  onMarkAllRead,
   selected,
+  onToggleRead,
   currentPage,
   totalMails,
   onPrevPage,
@@ -51,7 +51,7 @@ export default function InboxToolbar({
             <button className="toolbarIcon" onClick={() => alert('Archivar')}>
               <FaArchive title="Archivar" />
             </button>
-            <button className="toolbarIcon">
+            <button className="toolbarIcon" onClick={onToggleRead}>
               <span className="icon-unread" title="Marcar como no leído">
                 <FaEnvelope />
                 <span className="unread-dot" />
@@ -69,7 +69,7 @@ export default function InboxToolbar({
               />
               {showMenu && (
                 <div className="dropdownMenu">
-                  <div className="dropdownItem" onClick={onMarkAllRead}>
+                  <div className="dropdownItem" onClick={onToggleRead}>
                     <FaEnvelopeOpenText /> <span>Marcar como leído</span>
                   </div>
                 </div>

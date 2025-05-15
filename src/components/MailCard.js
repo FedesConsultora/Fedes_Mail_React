@@ -9,7 +9,7 @@ import {
   AiFillFile
 } from 'react-icons/ai';
 
-const MailCard = ({ mail = {}, selected = false, onToggle = () => {} }) => {
+const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false }) => {
   const navigate = useNavigate();
 
   const isToday = (dateStr) => {
@@ -33,7 +33,10 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {} }) => {
 
   const handleClick = (e) => {
     const isInteractive = e.target.closest('input, button, .attachment-pill, .hover-actions');
-    if (!isInteractive && mail.id) navigate(`/email/${mail.id}`);
+    if (!isInteractive && mail.id) {
+      navigate(`${isSent ? '/sent' : ''}/email/${mail.id}`);
+    }
+
   };
 
   const getAttachmentIcon = (name) => {

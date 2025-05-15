@@ -66,6 +66,7 @@ export default function Sent() {
                 mail={mail}
                 selected={selectedIds.includes(mail.id)}
                 onToggle={() => toggleSelectOne(mail.id)}
+                isSent={true}
               />
             )
         )

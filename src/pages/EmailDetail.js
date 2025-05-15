@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMatch, useParams  } from 'react-router-dom';
 import EmailToolbar from '../components/EmailToolbar';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
@@ -11,13 +11,39 @@ export default function EmailDetail() {
   const [event, setEvent] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [mail, setMail] = useState(null);
-  console.log('mail: ', mail);
+  const matchSent = useMatch('/sent/email/:id');
+  const isSent = Boolean(matchSent);
+  
+  async function toggleLecturaDetalle() {
+    try {
+      const nuevoEstado = !mail.is_read;
+      await api.setState({
+        folder: 'inbox',
+        mail_ids: [mail.id],
+        state: { is_read: nuevoEstado }
+      });
+
+      setMail((prev) => ({
+        ...prev,
+        is_read: nuevoEstado,
+        state: nuevoEstado ? 'read' : 'unread'
+      }));
+    } catch (err) {
+      console.error('❌ Error al cambiar estado en detalle:', err);
+      alert('No se pudo cambiar el estado del correo.');
+    }
+  }
+
   useEffect(() => {
-    console.log("🪵 param id =", id, typeof id);
-    api.obtenerDetalleCorreo(+id)
-     .then(setMail)
-     .catch(err => console.error("❌ Detalle correo:", err.message));
-  }, [id]);
+    const obtener = isSent ? api.obtenerDetalleCorreoEnviado
+                          : api.obtenerDetalleCorreo;
+
+    obtener(+id).then(m => {
+        console.log('[EmailDetail] setMail', m);
+        setMail(m);
+    })
+    .catch(err => console.error('❌ detalle:', err));
+  }, [id, isSent]);
 
   useEffect(() => {
     if (!mail) return;
@@ -52,7 +78,7 @@ export default function EmailDetail() {
       <EmailToolbar
         onDelete={() => alert('Eliminar')}
         onArchive={() => alert('Archivar')}
-        onMarkUnread={() => alert('Marcar como no leído')}
+        onMarkUnread={toggleLecturaDetalle}
       />
 
       <div className="email-detail">

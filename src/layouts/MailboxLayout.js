@@ -9,6 +9,7 @@ export default function MailboxLayout({
     someSelected,
     onSelectAll,
     onMarkAllRead,
+    onToggleRead,
     selected,
     currentPage,
     totalMails,
@@ -26,6 +27,7 @@ export default function MailboxLayout({
             selected={selected}
             currentPage={currentPage}
             totalMails={totalMails}
+            onToggleRead={onToggleRead}
             onPrevPage={onPrevPage}
             onNextPage={onNextPage}
         />

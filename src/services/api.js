@@ -141,6 +141,8 @@ const api = {
       cuerpo_html: html,
       cuerpo_text: text || html.replace(/<[^>]*>/g, ''),
     };
+    
+    console.log('🧪 Enviando body:', body);
 
     const res = await fetch(`${apiBase}/enviar_correo`, {
       method: 'POST',
@@ -156,35 +158,76 @@ const api = {
   },
 
   async obtenerEnviados(page = 1, limit = 50) {
-  if (mock) return mockEmails;     // o un mock distinto
+    if (mock) return mockEmails;          // mocks locales
 
-  try {
-    const url = new URL(`${apiBase}/sent`, window.location.origin);
-    url.searchParams.set('page', page);
-    url.searchParams.set('limit', limit);
+    try {
+      const url = new URL(`${apiBase}/sent`, window.location.origin);
+      url.searchParams.set('page', page);
+      url.searchParams.set('limit', limit);
 
-    const res = await fetch(url, {
-      method: 'GET',
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials            // 'include' en prod, 'omit' en localhost
+      });
+
+      if (!res.ok) {
+        throw new Error(`❌ Error HTTP ${res.status} al obtener enviados`);
+      }
+
+      const data    = await res.json();
+      const payload = data.result || data;  // admite ambos formatos
+
+      return {
+        emails: Array.isArray(payload.emails) ? payload.emails : [],
+        total : typeof payload.total === 'number' ? payload.total : 0
+      };
+
+    } catch (err) {
+      console.error('🚨 Error en obtenerEnviados:', err);
+      return { emails: [], total: 0 };
+    }
+  },
+  async obtenerDetalleCorreoEnviado(id) {
+    console.log('[FE] → /sent_email con id', id);        // 1️⃣
+
+    const res = await fetch('/FedesMail/api/sent_email', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
       credentials,
-      headers: { 'Content-Type': 'application/json' }
+      body   : JSON.stringify({ mail_id: id })
     });
 
-    if (!res.ok) {
-      throw new Error(`❌ Error HTTP ${res.status} al obtener enviados`);
+    console.log('[FE] status', res.status);              // 2️⃣
+
+    const data = await res.json().catch(err => {
+      console.error('[FE] ❌ json()', err);
+      throw err;
+    });
+
+    console.log('[FE] payload crudo', data);             // 3️⃣
+
+    if (data?.error) {
+      console.warn('[FE] ⚠️ backend error:', data.error);
+      return null;
     }
+    return data.result || data;
+  },
 
+  async setState({ folder = 'inbox', mail_ids = [], state = {} }) {
+    const res = await fetch('/FedesMail/api/set_state', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body   : JSON.stringify({ folder, mail_ids, state }),
+    });
+
+    if (!res.ok) throw new Error('Error al actualizar estado');
     const data = await res.json();
-    const { result } = data;
-    return {
-      emails: Array.isArray(result?.emails) ? result.emails : [],
-      total : typeof result?.total === 'number' ? result.total : 0
-    };
-
-  } catch (err) {
-    console.error('🚨 Error en obtenerEnviados:', err);
-    return { emails: [], total: 0 };
-  }
-}
+    if (data?.error) throw new Error(data.error);
+    return data;            // → { updated: n }
+  },
 };
+
+
 
 export default api;

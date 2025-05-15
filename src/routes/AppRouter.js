@@ -30,7 +30,15 @@ export default function AppRouter() {
           path="/sent"
           element={
             <MainLayout>
-              <Sent />                        {/* Página de enviados */}
+              <Sent />                        
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/sent/email/:id"
+          element={
+            <MainLayout>
+              <EmailDetail />
             </MainLayout>
           }
         />

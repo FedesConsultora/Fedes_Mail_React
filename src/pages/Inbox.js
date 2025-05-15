@@ -11,7 +11,38 @@ export default function Inbox() {
   const [currentPage, setCurrentPage] = useState(1);
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
-  console.log('mails: ', mails);
+  
+
+   /* ————— MARCAR LEÍDO / NO LEÍDO ————— */
+  async function toggleLecturaSeleccionados() {
+    if (!selectedIds.length) return;
+
+    const hayNoLeidos = mails.some(m => selectedIds.includes(m.id) && !m.is_read);
+    const nuevoEstado = hayNoLeidos; // Si hay alguno no leído, los marcamos como leídos
+
+    try {
+      await api.setState({
+        folder: 'inbox',
+        mail_ids: selectedIds,
+        state: { is_read: nuevoEstado }
+      });
+
+      setMails(curr =>
+        curr.map(m =>
+          selectedIds.includes(m.id)
+            ? { ...m, is_read: nuevoEstado, state: nuevoEstado ? 'read' : 'unread' }
+            : m
+        )
+      );
+
+      setSelectedIds([]);
+    } catch (err) {
+      console.error('❌ Error al actualizar estado:', err);
+      alert('No se pudo cambiar el estado de lectura.');
+    }
+  }
+
+
   useEffect(() => {
     if (user?.email) {
       api
@@ -44,12 +75,6 @@ export default function Inbox() {
     );
   };
 
-  const marcarTodosComoLeidos = () => {
-    const updated = mails.map((mail) =>
-      selectedIds.includes(mail?.id) ? { ...mail, state: 'read' } : mail
-    );
-    setMails(updated);
-  };
 
   const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
@@ -64,12 +89,13 @@ export default function Inbox() {
       allSelected={isAllSelected}
       someSelected={isSomeSelected}
       onSelectAll={toggleSelectAll}
-      onMarkAllRead={marcarTodosComoLeidos}
       selected={isAnySelected}
       currentPage={currentPage}
       totalMails={totalMails}
+      onToggleRead={toggleLecturaSeleccionados}
       onPrevPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+      
     >
       {Array.isArray(mails) && mails.length > 0 ? (
         mails.map((mail) =>
@@ -79,6 +105,7 @@ export default function Inbox() {
               mail={mail}
               selected={selectedIds.includes(mail.id)}
               onToggle={() => toggleSelectOne(mail.id)}
+              isSent={false}
             />
           ) : null
         )
