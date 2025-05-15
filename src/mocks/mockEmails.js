@@ -14,7 +14,7 @@ const mockEmails = {
         fecha: "2024-04-12 08:30:00",
         de: "noreply@linkedin.com",
         asunto: "Conexiones sugeridas",
-        contenido: "<p>Tenemos nuevas sugerencias para vos. <strong>¡Conectate hoy!</strong></p>",
+        contenido: "<p>Tenemos nuevas sugerencias para vos. ¡Conectate hoy!</p>",
         adjuntos: [],
         state: "read"
       },

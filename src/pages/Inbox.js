@@ -42,6 +42,25 @@ export default function Inbox() {
     }
   }
 
+  //MARCAR DETALLE COMO LEÍDO
+  async function marcarComoLeidoIndividual(id, is_read = true) {
+    try {
+      await api.setState({
+        folder: 'inbox',
+        mail_ids: [id],
+        state: { is_read }
+      });
+
+      setMails((curr) =>
+        curr.map((m) =>
+          m.id === id ? { ...m, is_read, state: is_read ? 'read' : 'unread' } : m
+        )
+      );
+    } catch (err) {
+      console.error('❌ Error al cambiar lectura:', err);
+    }
+  }
+
 
   useEffect(() => {
     if (user?.email) {
@@ -80,6 +99,12 @@ export default function Inbox() {
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
   const isAnySelected = selectedIds.length > 0;
 
+  const todosLeidos = selectedIds.length > 0 &&
+  selectedIds.every(id => {
+    const mail = mails.find(m => m.id === id);
+    return mail?.is_read;
+  });
+
   if (loading || !user) {
     return <div>Cargando usuario y correos...</div>;
   }
@@ -90,6 +115,7 @@ export default function Inbox() {
       someSelected={isSomeSelected}
       onSelectAll={toggleSelectAll}
       selected={isAnySelected}
+      isRead={todosLeidos}
       currentPage={currentPage}
       totalMails={totalMails}
       onToggleRead={toggleLecturaSeleccionados}
@@ -106,6 +132,7 @@ export default function Inbox() {
               selected={selectedIds.includes(mail.id)}
               onToggle={() => toggleSelectOne(mail.id)}
               isSent={false}
+              onMarkRead={marcarComoLeidoIndividual}
             />
           ) : null
         )

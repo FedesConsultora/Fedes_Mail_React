@@ -7,10 +7,15 @@ import ComposeModal from '../ComposeModal';
 export default function Sidebar({ isCollapsed }) {
   const [showCompose, setShowCompose] = useState(false);
 
+  const logoURL = isCollapsed
+    ? 'https://fedesagency.com/fedes-consultora/landing/IsologoBlanco.png'
+    : 'https://fedesagency.com/fedes-consultora/landing/logoBlanco.png';
+
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="logoEiconos">
-        <img src="https://fedesagency.com/fedes-consultora/landing/logoBlanco.png" alt="Fedes" />
+        <img src={logoURL} alt="Fedes" />
+
         <ComposeButton onClick={() => setShowCompose(true)} />
 
         <nav>

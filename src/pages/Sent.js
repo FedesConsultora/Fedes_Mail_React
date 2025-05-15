@@ -13,6 +13,24 @@ export default function Sent() {
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
 
+  /* --- MARCAR LEÍDO / NO LEÍDO --- */
+  async function marcarComoLeidoIndividual(id, is_read = true) {
+    try {
+      await api.setState({
+        folder: 'sent',
+        mail_ids: [id],
+        state: { is_read }
+      });
+
+      setMails((curr) =>
+        curr.map((m) =>
+          m.id === id ? { ...m, is_read, state: is_read ? 'read' : 'unread' } : m
+        )
+      );
+    } catch (err) {
+      console.error('❌ Error al cambiar lectura:', err);
+    }
+  }
   /* --- carga de enviados --- */
   useEffect(() => {
     if (!loading) {
@@ -67,6 +85,7 @@ export default function Sent() {
                 selected={selectedIds.includes(mail.id)}
                 onToggle={() => toggleSelectOne(mail.id)}
                 isSent={true}
+                onMarkRead={marcarComoLeidoIndividual}
               />
             )
         )

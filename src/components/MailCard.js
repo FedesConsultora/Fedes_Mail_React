@@ -9,7 +9,7 @@ import {
   AiFillFile
 } from 'react-icons/ai';
 
-const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false }) => {
+const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, }) => {
   const navigate = useNavigate();
 
   const isToday = (dateStr) => {
@@ -34,9 +34,15 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
   const handleClick = (e) => {
     const isInteractive = e.target.closest('input, button, .attachment-pill, .hover-actions');
     if (!isInteractive && mail.id) {
+      if (!mail.is_read) onMarkRead(mail.id);
       navigate(`${isSent ? '/sent' : ''}/email/${mail.id}`);
     }
 
+  };
+
+  const handleMarkReadClick = (e) => {
+    e.stopPropagation(); // para que no navegue
+    if (!mail.is_read) onMarkRead(mail.id); // <- NUEVO
   };
 
   const getAttachmentIcon = (name) => {
@@ -75,9 +81,18 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
         <div className="hover-actions">
           <button title="Eliminar"><FaTrash /></button>
           <button title="Archivar"><FaArchive /></button>
-          <button title="Marcar como no leído" className="unread-icon">
+          <button
+            title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}
+            className="unread-icon"
+            onClick={(e) => {
+              e.stopPropagation(); // evitar navegación
+              if (typeof onMarkRead === 'function') {
+                onMarkRead(mail.id, !mail.is_read); // alterna
+              }
+            }}
+          >
             <FaEnvelope />
-            <span className="dot" />
+            {mail.is_read && <span className="dot" />} 
           </button>
         </div>
       </div>

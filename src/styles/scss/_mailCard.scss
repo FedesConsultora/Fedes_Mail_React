@@ -1,19 +1,56 @@
 .mail-card {
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e6e6e6;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s, transform 0.1s, background 0.2s;
   cursor: pointer;
-  transition: background 0.2s;
+  .unread-icon {
+    position: relative;
 
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #000000; 
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      right: -6px;
+    }
+  }
   &.read {
-    background: #f8f9fa;
+    background: #f6f8fc;
+
+    .mail-sender,
+    .mail-subject {
+      font-weight: 400;
+      color: #5f6368;
+    }
+
+    .mail-snippet {
+      color: #80868b;
+    }
   }
 
-  &.new {
+  &.unread {
     background: #eaf1fb;
+
+    .mail-sender,
+    .mail-subject {
+      font-weight: 700;
+      color: #202124;
+    }
+
+    .mail-snippet {
+      color: #3c4043;
+    }
   }
 
   &:hover {
-    background: #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+    background: #f9fbff;
   }
 
   .mail-row {
@@ -22,52 +59,6 @@
     gap: 1rem;
     position: relative;
 
-    .hover-actions {
-      display: flex;
-      gap: 0.6rem;
-      position: absolute;
-      right: 1rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-  
-      button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #999;
-        display: flex;
-        align-items: center;
-        font-size: 0.95rem;
-        position: relative;
-  
-        .dot {
-          width: 6px;
-          height: 6px;
-          background: #555;
-          border-radius: 50%;
-          position: absolute;
-          top: 2px;
-          right: -6px;
-        }
-  
-        &:hover {
-          color: #444;
-        }
-      }
-    }
-    .mail-date {
-      transition: opacity 0.2s ease;
-    }
-    &:hover{
-      .mail-date {
-        opacity: 0;
-      }
-    }
-    &:hover .hover-actions {
-      opacity: 1;
-      pointer-events: auto;
-    }
     input[type='checkbox'] {
       cursor: pointer;
     }
@@ -86,16 +77,15 @@
 
     .mail-info {
       display: flex;
-      gap: 0.6rem;
       flex: 1;
       overflow: hidden;
+      gap: 0.6rem;
 
       .mail-sender {
-        font-weight: 600;
-        color: #202124;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        max-width: 150px;
       }
 
       .mail-subject,
@@ -103,12 +93,16 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        color: #5f6368;
         max-width: 40%;
       }
 
       .mail-subject {
         font-weight: 500;
+      }
+
+      .mail-snippet {
+        color: #5f6368;
+        font-weight: 300;
       }
     }
 
@@ -117,6 +111,38 @@
       color: #5f6368;
       white-space: nowrap;
       margin-left: auto;
+      transition: opacity 0.2s ease;
+    }
+
+    .hover-actions {
+      display: flex;
+      gap: 0.6rem;
+      position: absolute;
+      right: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+
+      button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #999;
+        font-size: 0.95rem;
+
+        &:hover {
+          color: #444;
+        }
+      }
+    }
+
+    &:hover .hover-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    &:hover .mail-date {
+      opacity: 0;
     }
   }
 
@@ -136,23 +162,20 @@
       border-radius: 20px;
       padding: 0.2rem 0.6rem 0.2rem 0.4rem;
       font-size: 0.85rem;
-      text-decoration: none;
       color: #333;
       max-width: 160px;
       overflow: hidden;
+      text-decoration: none;
 
       .file-icon {
         color: #d93025;
         font-size: 1rem;
         margin-right: 0.3rem;
-        flex-shrink: 0;
       }
 
       .filename {
-        text-overflow: ellipsis;
-        white-space: nowrap;
         overflow: hidden;
-        display: inline-block;
+        text-overflow: ellipsis;
         max-width: 100px;
       }
 
@@ -164,7 +187,6 @@
     .more-attachments {
       font-size: 0.85rem;
       color: #666;
-      align-self: center;
     }
   }
 }

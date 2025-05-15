@@ -79,6 +79,7 @@ export default function EmailDetail() {
         onDelete={() => alert('Eliminar')}
         onArchive={() => alert('Archivar')}
         onMarkUnread={toggleLecturaDetalle}
+        isRead={mail.is_read}
       />
 
       <div className="email-detail">

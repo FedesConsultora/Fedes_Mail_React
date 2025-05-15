@@ -11,6 +11,7 @@ export default function MailboxLayout({
     onMarkAllRead,
     onToggleRead,
     selected,
+    isRead, 
     currentPage,
     totalMails,
     onPrevPage,
@@ -25,6 +26,7 @@ export default function MailboxLayout({
             onSelectAll={onSelectAll}
             onMarkAllRead={onMarkAllRead}
             selected={selected}
+            isRead={isRead}  
             currentPage={currentPage}
             totalMails={totalMails}
             onToggleRead={onToggleRead}

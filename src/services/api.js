@@ -226,6 +226,7 @@ const api = {
     if (data?.error) throw new Error(data.error);
     return data;            // → { updated: n }
   },
+  
 };
 
 

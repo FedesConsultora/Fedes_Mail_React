@@ -2,7 +2,7 @@ import React from 'react';
 import { FaArrowLeft, FaTrash, FaArchive, FaEnvelope } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-export default function EmailToolbar({ onDelete, onArchive, onMarkUnread, showBack = true }) {
+export default function EmailToolbar({ onDelete, onArchive, onMarkUnread, showBack = true, isRead  }) {
   const navigate = useNavigate();
 
   return (
@@ -18,10 +18,14 @@ export default function EmailToolbar({ onDelete, onArchive, onMarkUnread, showBa
       <button className="toolbarIcon" onClick={onArchive}>
         <FaArchive title="Archivar" />
       </button>
-      <button className="toolbarIcon" onClick={onMarkUnread}>
-        <span className="icon-unread" title="Marcar como no leído">
-            <FaEnvelope />
-            <span className="unread-dot" />
+      <button
+        className="toolbarIcon"
+        onClick={onMarkUnread}
+        title={isRead ? 'Marcar como no leído' : 'Marcar como leído'}
+      >
+        <span className="icon-unread">
+          <FaEnvelope />
+          {isRead && <span className="unread-dot" />}
         </span>
       </button>
     </div>
