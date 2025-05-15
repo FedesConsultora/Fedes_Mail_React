@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope } from 'react-icons/fa';
 import {
@@ -9,7 +8,7 @@ import {
   AiFillFile
 } from 'react-icons/ai';
 
-const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, }) => {
+const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, }) => {
   const navigate = useNavigate();
 
   const isToday = (dateStr) => {
@@ -21,6 +20,11 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
       date.getMonth() === today.getMonth() &&
       date.getFullYear() === today.getFullYear()
     );
+  };
+
+  const handleToggleFavorite = (e) => {
+    e.stopPropagation(); 
+    onToggleFavorite(mail.id, !mail.favorite); 
   };
 
   const formatDate = (dateStr) => {
@@ -59,7 +63,11 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     <div className={`mail-card ${mail.state || ''}`} onClick={handleClick}>
       <div className="mail-row">
         <input type="checkbox" checked={selected} onChange={onToggle} />
-        <button className="starBtn" title="Destacar">
+        <button
+          className="starBtn"
+          title={mail.favorite ? 'Quitar de destacados' : 'Marcar como destacado'}
+          onClick={handleToggleFavorite}
+        >
           {mail.favorite ? <FaStar /> : <FaRegStar />}
         </button>
 
@@ -84,12 +92,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
           <button
             title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}
             className="unread-icon"
-            onClick={(e) => {
-              e.stopPropagation(); // evitar navegación
-              if (typeof onMarkRead === 'function') {
-                onMarkRead(mail.id, !mail.is_read); // alterna
-              }
-            }}
+            onClick={handleMarkReadClick}
           >
             <FaEnvelope />
             {mail.is_read && <span className="dot" />} 

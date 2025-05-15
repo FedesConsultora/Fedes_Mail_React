@@ -226,7 +226,14 @@ const api = {
     if (data?.error) throw new Error(data.error);
     return data;            // → { updated: n }
   },
-  
+  async obtenerDestacados(page = 1, limit = 50) {
+    const res = await fetch('/FedesMail/api/starred', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page, limit })
+    });
+    return res.json();
+  }
 };
 
 

@@ -12,7 +12,25 @@ export default function Inbox() {
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
   
+  /* ————— MARCAR COMO FAVORITO ————— */
+  async function toggleFavorite(id, nuevoEstado) {
+    try {
+      await api.setState({
+        folder: 'inbox',
+        mail_ids: [id],
+        state: { favorite: nuevoEstado }
+      });
 
+      setMails(curr =>
+        curr.map(m =>
+          m.id === id ? { ...m, favorite: nuevoEstado } : m
+        )
+      );
+    } catch (err) {
+      console.error('❌ Error al actualizar favorito:', err);
+    }
+  }
+  
    /* ————— MARCAR LEÍDO / NO LEÍDO ————— */
   async function toggleLecturaSeleccionados() {
     if (!selectedIds.length) return;
@@ -132,6 +150,7 @@ export default function Inbox() {
               selected={selectedIds.includes(mail.id)}
               onToggle={() => toggleSelectOne(mail.id)}
               isSent={false}
+              onToggleFavorite={toggleFavorite}
               onMarkRead={marcarComoLeidoIndividual}
             />
           ) : null
