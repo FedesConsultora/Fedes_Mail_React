@@ -7,11 +7,11 @@ import { ToastProvider } from './contexts/ToastContext';
 function App() {
   return (
     <div className="App">
-      <UserProvider>
-        <ToastProvider>
-          <AppRouter />
-        </ToastProvider>
-      </UserProvider>
+      <ToastProvider>
+        <UserProvider>
+            <AppRouter />
+        </UserProvider>
+      </ToastProvider>
     </div>
   );
 }
