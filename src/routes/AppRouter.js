@@ -5,6 +5,8 @@ import Inbox from '../pages/Inbox';
 import EmailDetail from '../pages/EmailDetail';
 import NotFound from '../pages/NotFound';
 import Sent from '../pages/Sent';     
+import Starred from '../pages/Starred';
+import Trash from '../pages/Trash';
 
 export default function AppRouter() {
   return (
@@ -34,6 +36,24 @@ export default function AppRouter() {
             </MainLayout>
           }
         />
+        
+        <Route
+          path="/starred"
+          element={
+            <MainLayout>
+              <Starred />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/trash"
+          element={
+            <MainLayout>
+              <Trash />
+            </MainLayout>
+          }
+        />
+
         <Route
           path="/sent/email/:id"
           element={

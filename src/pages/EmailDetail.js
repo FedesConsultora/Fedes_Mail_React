@@ -76,6 +76,7 @@ export default function EmailDetail() {
     <div className="inboxContainer">
       <SearchAndFilters />
       <EmailToolbar
+        mailId={Number(id)}
         onDelete={() => alert('Eliminar')}
         onArchive={() => alert('Archivar')}
         onMarkUnread={toggleLecturaDetalle}

@@ -7,23 +7,39 @@ import {
   FaArchive,
   FaEnvelope,
   FaChevronLeft,
-  FaChevronRight
+  FaChevronRight,
+  FaUndoAlt
 } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+import api from '../services/api';
 
 export default function InboxToolbar({
   allSelected,
   someSelected,
   onSelectAll,
-  selected,
+  selected = [],
   isRead,
   onToggleRead,
   currentPage,
   totalMails,
   onPrevPage,
-  onNextPage
+  onNextPage,
+  onRestoreSelected // 👈 debe venir como prop desde Trash.jsx
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const checkboxRef = useRef(null);
+  const location = useLocation();
+
+  // Carpeta actual detectada por pathname
+  const getFolderFromPath = (pathname) => {
+    if (pathname.includes('/sent')) return 'sent';
+    if (pathname.includes('/starred')) return 'starred';
+    if (pathname.includes('/spam')) return 'spam';
+    if (pathname.includes('/trash')) return 'trash';
+    return 'inbox';
+  };
+
+  const currentFolder = getFolderFromPath(location.pathname);
 
   useEffect(() => {
     if (checkboxRef.current) {
@@ -33,6 +49,7 @@ export default function InboxToolbar({
 
   const start = (currentPage - 1) * 50 + 1;
   const end = Math.min(currentPage * 50, totalMails);
+  const hasSelection = Array.isArray(selected) && selected.length > 0;
 
   return (
     <div className="inboxToolbar">
@@ -44,14 +61,37 @@ export default function InboxToolbar({
           onChange={onSelectAll}
         />
 
-        {selected ? (
+        {hasSelection ? (
           <>
-            <button className="toolbarIcon" onClick={() => alert('Eliminar')}>
+            {/* ✅ Restaurar solo si estamos en /trash */}
+            {currentFolder === 'trash' && onRestoreSelected && (
+              <button
+                className="toolbarIcon"
+                onClick={() => onRestoreSelected(selected)}
+              >
+                <FaUndoAlt title="Restaurar seleccionados" />
+              </button>
+            )}
+
+            <button
+              className="toolbarIcon"
+              onClick={async () => {
+                try {
+                  await api.deleteMails({ folder: currentFolder, mail_ids: selected });
+                  window.location.reload(); // o actualizá estado si querés evitar reload
+                } catch (err) {
+                  console.error('❌ Error al eliminar:', err);
+                  alert('Error al eliminar correos');
+                }
+              }}
+            >
               <FaTrash title="Eliminar" />
             </button>
+
             <button className="toolbarIcon" onClick={() => alert('Archivar')}>
               <FaArchive title="Archivar" />
             </button>
+
             <button
               className="toolbarIcon"
               onClick={onToggleRead}
@@ -65,7 +105,11 @@ export default function InboxToolbar({
           </>
         ) : (
           <>
-            <FaRedo className="toolbarIcon" title="Actualizar" onClick={() => window.location.reload()} />
+            <FaRedo
+              className="toolbarIcon"
+              title="Actualizar"
+              onClick={() => window.location.reload()}
+            />
             <div className="toolbarMenu">
               <FaEllipsisV
                 className="toolbarIcon"
@@ -84,10 +128,10 @@ export default function InboxToolbar({
         )}
       </div>
 
-      
-
       <div className="paginationControls">
-        <span className="paginationRange">{start}–{end} de {totalMails}</span>
+        <span className="paginationRange">
+          {start}–{end} de {totalMails}
+        </span>
         <button
           className="paginationArrow left"
           onClick={onPrevPage}

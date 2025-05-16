@@ -232,8 +232,107 @@ const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ page, limit })
     });
-    return res.json();
+
+    const data = await res.json();
+    const result = data.result || data;
+
+    return {
+      emails: Array.isArray(result.emails) ? result.emails : [],
+      total : typeof result.total === 'number' ? result.total : 0
+    };
+  },
+
+  async deleteMails({ folder = 'inbox', mail_ids = [] } = {}) {
+    console.log('[FE] 🗑️ delete →', { folder, mail_ids });
+
+    const res = await fetch(`${apiBase}/delete`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body   : JSON.stringify({ folder, mail_ids })
+    });
+
+    console.log('[FE] status', res.status);
+
+    const data = await res.json().catch(err => {
+      console.error('[FE] ❌ json()', err);
+      throw err;
+    });
+    console.log('[FE] payload', data);
+
+    if (!res.ok || data?.error) {
+      throw new Error(data?.error || 'Error al eliminar');
+    }
+    return data;                 
+  },
+  async obtenerEliminados(page = 1, limit = 50, search = '') {
+    console.log('[FE] 🗑️ trash page', page, 'search', search);
+
+    const body = { page, limit };
+    if (search?.trim()) body.search = search.trim();
+
+    const res = await fetch(`${apiBase}/trash`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body   : JSON.stringify(body)
+    });
+
+    const data = await res.json().catch(err => {
+      console.error('[FE] ❌ json()', err);
+      throw err;
+    });
+
+    const result = data.result || data;
+    return {
+      emails: Array.isArray(result.emails) ? result.emails : [],
+      total : typeof result.total === 'number' ? result.total : 0
+    };
+  },
+  async vaciarPapelera() {
+    console.log('[FE] 🧹 vaciar papelera manualmente');
+
+    const res = await fetch(`${apiBase}/trash/empty`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials
+    });
+
+    const data = await res.json().catch(err => {
+      console.error('[FE] ❌ json()', err);
+      throw err;
+    });
+
+    if (!res.ok || data?.error) {
+      throw new Error(data?.error || 'Error al vaciar la papelera');
+    }
+
+    return data; // { deleted: n }
+  },
+  async restoreMails(mail_ids = []) {
+    if (!Array.isArray(mail_ids) || mail_ids.length === 0) {
+      throw new Error('Lista de mails vacía');
+    }
+
+    const res = await fetch(`${apiBase}/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_ids })
+    });
+
+    const data = await res.json().catch(err => {
+      console.error('[FE] ❌ json()', err);
+      throw err;
+    });
+
+    if (!res.ok || data?.error) {
+      throw new Error(data?.error || 'Error al restaurar');
+    }
+
+    return data;  // { restored: n }
   }
+
 };
 
 

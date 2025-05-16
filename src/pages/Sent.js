@@ -64,6 +64,14 @@ export default function Sent() {
     }
   }, [loading, currentPage]);
 
+  // Elimina del estado local
+  function eliminarCorreoLocal(id) {
+    setMails((curr) => curr.filter((m) => m.id !== id));
+    setSelectedIds((prev) => prev.filter((i) => i !== id));
+    setTotalMails((prev) => Math.max(prev - 1, 0));
+  }
+
+
   /* --- helpers selección --- */
   const totalPages = Math.ceil(totalMails / mailsPerPage);
 
@@ -106,6 +114,7 @@ export default function Sent() {
                 isSent={true}
                 onToggleFavorite={toggleFavorite}
                 onMarkRead={marcarComoLeidoIndividual}
+                onDeleteMail={eliminarCorreoLocal}
               />
             )
         )

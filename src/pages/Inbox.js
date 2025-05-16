@@ -112,6 +112,11 @@ export default function Inbox() {
     );
   };
 
+  function eliminarCorreoLocal(id) {
+    setMails((curr) => curr.filter((m) => m.id !== id));
+    setSelectedIds((prev) => prev.filter((i) => i !== id));
+    setTotalMails((prev) => Math.max(prev - 1, 0));
+  }
 
   const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
@@ -152,6 +157,7 @@ export default function Inbox() {
               isSent={false}
               onToggleFavorite={toggleFavorite}
               onMarkRead={marcarComoLeidoIndividual}
+              onDeleteMail={eliminarCorreoLocal}
             />
           ) : null
         )

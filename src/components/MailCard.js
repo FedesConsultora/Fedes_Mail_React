@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope } from 'react-icons/fa';
 import {
   AiFillFilePdf,
@@ -7,9 +7,20 @@ import {
   AiFillFileExcel,
   AiFillFile
 } from 'react-icons/ai';
+import api from '../services/api';
 
-const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, }) => {
+const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, onDeleteMail = () => {},  }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getCurrentFolder = () => {
+    const path = location.pathname;
+    if (path.includes('/sent')) return 'sent';
+    if (path.includes('/starred')) return 'starred';
+    if (path.includes('/spam')) return 'spam';
+    return 'inbox';
+  };
+  const currentFolder = getCurrentFolder();
 
   const isToday = (dateStr) => {
     if (!dateStr) return false;
@@ -47,6 +58,17 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
   const handleMarkReadClick = (e) => {
     e.stopPropagation(); // para que no navegue
     if (!mail.is_read) onMarkRead(mail.id); // <- NUEVO
+  };
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    try {
+      await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
+      onDeleteMail(mail.id); 
+    } catch (err) {
+      console.error('❌ Error al eliminar correo:', err);
+      alert('No se pudo eliminar el correo');
+    }
   };
 
   const getAttachmentIcon = (name) => {
@@ -87,7 +109,9 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
         <span className="mail-date">{formatDate(mail.fecha)}</span>
 
         <div className="hover-actions">
-          <button title="Eliminar"><FaTrash /></button>
+          <button title="Eliminar" onClick={handleDelete}>
+            <FaTrash />
+          </button>
           <button title="Archivar"><FaArchive /></button>
           <button
             title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}

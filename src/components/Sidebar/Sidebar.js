@@ -21,7 +21,7 @@ export default function Sidebar({ isCollapsed }) {
         <nav>
           <ul>
             <li>
-              <NavLink to="/inbox" className={({ isActive }) => isActive ? 'active' : ''}>
+              <NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>
                 <FaInbox /> {!isCollapsed && <span>Recibidos</span>}
               </NavLink>
             </li>

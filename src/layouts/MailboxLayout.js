@@ -14,6 +14,7 @@ export default function MailboxLayout({
     isRead, 
     currentPage,
     totalMails,
+    onRestoreSelected,
     onPrevPage,
     onNextPage
   }) {
@@ -32,6 +33,7 @@ export default function MailboxLayout({
             onToggleRead={onToggleRead}
             onPrevPage={onPrevPage}
             onNextPage={onNextPage}
+            onRestoreSelected={onRestoreSelected}
         />
         <div className="mailContentWrapper">
           {children}
