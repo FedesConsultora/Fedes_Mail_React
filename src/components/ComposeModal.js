@@ -5,6 +5,7 @@ import { MdOutlineImage, MdOutlineDraw } from 'react-icons/md';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import api from '../services/api'; 
+import { useToast } from '../contexts/ToastContext';
 
 export default function ComposeModal({ onClose }) {
   /* ---------- estado ---------- */
@@ -13,6 +14,7 @@ export default function ComposeModal({ onClose }) {
   const [showCco, setShowCco] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sending, setSending] = useState(false);
+  const { showToast } = useToast();
 
   /* ---------- emoji drag ---------- */
   const [emojiPosition, setEmojiPosition] = useState(() => {
@@ -31,7 +33,7 @@ export default function ComposeModal({ onClose }) {
 
   const handleSend = async () => {
     if (!form.to || !form.subject) {
-      alert('Por favor completá "Para" y "Asunto"');
+      showToast({ message: '⚠️ Completá los campos "Para" y "Asunto"', type: 'warning' });
       return;
     }
 
@@ -46,10 +48,10 @@ export default function ComposeModal({ onClose }) {
 
     setSending(false);
     if (success) {
-      alert('Correo enviado ✅');
+      showToast({ message: '📨 Correo enviado con éxito', type: 'success' });
       onClose();
     } else {
-      alert(`Error al enviar: ${error}`);
+      showToast({ message: '❌ Error al enviar: ${error}', type: 'error' });
     }
   };
 

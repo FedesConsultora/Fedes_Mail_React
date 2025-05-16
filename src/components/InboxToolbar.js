@@ -11,7 +11,7 @@ import {
   FaUndoAlt
 } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
-import api from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function InboxToolbar({
   allSelected,
@@ -24,12 +24,13 @@ export default function InboxToolbar({
   totalMails,
   onPrevPage,
   onNextPage,
+  onDeleteMultiple,
   onRestoreSelected // 👈 debe venir como prop desde Trash.jsx
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const checkboxRef = useRef(null);
   const location = useLocation();
-
+  const { showToast } = useToast();
   // Carpeta actual detectada por pathname
   const getFolderFromPath = (pathname) => {
     if (pathname.includes('/sent')) return 'sent';
@@ -63,7 +64,6 @@ export default function InboxToolbar({
 
         {hasSelection ? (
           <>
-            {/* ✅ Restaurar solo si estamos en /trash */}
             {currentFolder === 'trash' && onRestoreSelected && (
               <button
                 className="toolbarIcon"
@@ -77,11 +77,10 @@ export default function InboxToolbar({
               className="toolbarIcon"
               onClick={async () => {
                 try {
-                  await api.deleteMails({ folder: currentFolder, mail_ids: selected });
-                  window.location.reload(); // o actualizá estado si querés evitar reload
+                  onDeleteMultiple?.();
                 } catch (err) {
                   console.error('❌ Error al eliminar:', err);
-                  alert('Error al eliminar correos');
+                  showToast({ message: '❌ Error al eliminar correos.', type: 'error' });
                 }
               }}
             >

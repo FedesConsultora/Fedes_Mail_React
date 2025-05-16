@@ -16,6 +16,7 @@ export default function MailboxLayout({
     totalMails,
     onRestoreSelected,
     onPrevPage,
+    onDeleteMultiple,
     onNextPage
   }) {
     return (
@@ -34,6 +35,7 @@ export default function MailboxLayout({
             onPrevPage={onPrevPage}
             onNextPage={onNextPage}
             onRestoreSelected={onRestoreSelected}
+            onDeleteMultiple={onDeleteMultiple}
         />
         <div className="mailContentWrapper">
           {children}

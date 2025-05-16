@@ -3,6 +3,7 @@ import MailCard from '../components/MailCard';
 import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Inbox() {
   const { user, loading } = useUser();
@@ -11,7 +12,8 @@ export default function Inbox() {
   const [currentPage, setCurrentPage] = useState(1);
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
-  
+  const { showToast } = useToast();
+
   /* ————— MARCAR COMO FAVORITO ————— */
   async function toggleFavorite(id, nuevoEstado) {
     try {
@@ -27,7 +29,9 @@ export default function Inbox() {
         )
       );
     } catch (err) {
-      console.error('❌ Error al actualizar favorito:', err);
+      showToast({ message: '❌ Error al actualizar favoritos.', type: 'error' });
+      
+      
     }
   }
   
@@ -54,9 +58,11 @@ export default function Inbox() {
       );
 
       setSelectedIds([]);
+      showToast({ message: `✅ ${selectedIds.length} correo(s) marcados como ${nuevoEstado ? 'leídos' : 'no leídos'}`, type: 'success' });
     } catch (err) {
       console.error('❌ Error al actualizar estado:', err);
-      alert('No se pudo cambiar el estado de lectura.');
+      showToast({ message: '❌ Error al marcar como leido.', type: 'error' });
+      
     }
   }
 
@@ -75,7 +81,7 @@ export default function Inbox() {
         )
       );
     } catch (err) {
-      console.error('❌ Error al cambiar lectura:', err);
+      showToast({ message: '❌ Error al cambiar lectura.', type: 'error' });
     }
   }
 
@@ -116,6 +122,7 @@ export default function Inbox() {
     setMails((curr) => curr.filter((m) => m.id !== id));
     setSelectedIds((prev) => prev.filter((i) => i !== id));
     setTotalMails((prev) => Math.max(prev - 1, 0));
+    showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
   }
 
   const isAllSelected = selectedIds.length === mails.length && mails.length > 0;

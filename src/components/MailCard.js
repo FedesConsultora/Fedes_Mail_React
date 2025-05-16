@@ -8,11 +8,12 @@ import {
   AiFillFile
 } from 'react-icons/ai';
 import api from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, onDeleteMail = () => {},  }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const { showToast } = useToast();
   const getCurrentFolder = () => {
     const path = location.pathname;
     if (path.includes('/sent')) return 'sent';
@@ -63,11 +64,21 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
   const handleDelete = async (e) => {
     e.stopPropagation();
     try {
-      await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
-      onDeleteMail(mail.id); 
+      const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
+
+      // Solo si todo salió bien
+      if (res?.success || res?.ok !== false) {
+        onDeleteMail(mail.id);
+        showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
+
+      } else {
+        throw new Error('Respuesta no válida del servidor');
+      }
+
     } catch (err) {
       console.error('❌ Error al eliminar correo:', err);
-      alert('No se pudo eliminar el correo');
+      showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
+
     }
   };
 
