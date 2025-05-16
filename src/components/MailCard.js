@@ -57,8 +57,8 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
   };
 
   const handleMarkReadClick = (e) => {
-    e.stopPropagation(); // para que no navegue
-    if (!mail.is_read) onMarkRead(mail.id); // <- NUEVO
+    e.stopPropagation(); 
+    onMarkRead(mail.id, !mail.is_read);  // ← Cambia el estado, no solo lo marca leído
   };
 
   const handleDelete = async (e) => {

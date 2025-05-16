@@ -16,6 +16,7 @@ export default function MailboxLayout({
     totalMails,
     onRestoreSelected,
     onPrevPage,
+    onReload,
     onDeleteMultiple,
     onNextPage
   }) {
@@ -28,7 +29,8 @@ export default function MailboxLayout({
             onSelectAll={onSelectAll}
             onMarkAllRead={onMarkAllRead}
             selected={selected}
-            isRead={isRead}  
+            isRead={isRead}
+            onReload={onReload}
             currentPage={currentPage}
             totalMails={totalMails}
             onToggleRead={onToggleRead}

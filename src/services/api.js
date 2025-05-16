@@ -29,7 +29,7 @@ const ensure = async (res) => {
   if (!res.ok || data?.error) {
     throw new Error(data?.error || `HTTP ${res.status}`);
   }
-  return data;                              // ← siempre payload sin error
+  return data?.result ?? data; 
 };
 
 /* --------------------------------------------------------
@@ -41,12 +41,13 @@ const api = {
     if (mock) return mockUsuario;
 
     const res = await fetch(`${apiBase}/usuario_actual`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       credentials,
       body: JSON.stringify({})
     });
-    return await ensure(res);
+
+    return await ensure(res); 
   },
 
   /* ---------- Inbox ---------- */

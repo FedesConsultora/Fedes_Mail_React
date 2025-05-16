@@ -12,14 +12,13 @@ export default function UserProvider({ children }) {
 
   useEffect(() => {
     api.obtenerUsuarioActual()
-      .then(res => {
-        const usuario = res?.result;
+      .then(usuario => {
         if (usuario && typeof usuario.nombre === 'string' && typeof usuario.email === 'string') {
           setUser(usuario);
           console.log('📦 Usuario recibido y procesado:', usuario);
           showToast({ message: `👤 Bienvenido ${usuario.nombre.split(' ')[0]}!`, type: 'success' });
         } else {
-          console.warn('⚠️ Usuario inválido o sin datos esperados:', res);
+          console.warn('⚠️ Usuario inválido o sin datos esperados:', usuario);
           setUser(null);
           showToast({ message: '⚠️ No se pudo obtener tu perfil correctamente.', type: 'warning' });
         }

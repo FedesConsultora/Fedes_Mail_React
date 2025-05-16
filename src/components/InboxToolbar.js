@@ -24,6 +24,7 @@ export default function InboxToolbar({
   totalMails,
   onPrevPage,
   onNextPage,
+  onReload,
   onDeleteMultiple,
   onRestoreSelected // 👈 debe venir como prop desde Trash.jsx
 }) {
@@ -105,10 +106,10 @@ export default function InboxToolbar({
         ) : (
           <>
             <FaRedo
-              className="toolbarIcon"
-              title="Actualizar"
-              onClick={() => window.location.reload()}
-            />
+                className="toolbarIcon"
+                title="Actualizar"
+                onClick={onReload}
+              />
             <div className="toolbarMenu">
               <FaEllipsisV
                 className="toolbarIcon"

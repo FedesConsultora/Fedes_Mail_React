@@ -53,20 +53,20 @@ export default function Sent() {
   }
   /* --- carga de enviados --- */
   useEffect(() => {
-  if (!loading && user && typeof user.email === 'string') {
-    api
-      .obtenerEnviados(currentPage, mailsPerPage)
-      .then(({ emails, total }) => {
-        setMails(emails);
-        setTotalMails(total);
-        setSelectedIds([]);
-      })
-      .catch((err) => {
-        console.error('❌ Error al cargar enviados:', err);
-        showToast({ message: '❌ Error al cargar enviados:', type: 'error' });
-      });
-  }
-}, [loading, user, currentPage]);
+    if (!loading && user && typeof user.email === 'string') {
+      api
+        .obtenerEnviados(currentPage, mailsPerPage)
+        .then(({ emails, total }) => {
+          setMails(emails);
+          setTotalMails(total);
+          setSelectedIds([]);
+        })
+        .catch((err) => {
+          console.error('❌ Error al cargar enviados:', err);
+          showToast({ message: '❌ Error al cargar enviados:', type: 'error' });
+        });
+    }
+  }, [loading, user, currentPage, showToast]);
 
   // Elimina del estado local
   function eliminarCorreoLocal(id) {
@@ -100,7 +100,7 @@ export default function Sent() {
       someSelected={selectedIds.length > 0 && selectedIds.length < mails.length}
       onSelectAll={toggleSelectAll}
       onMarkAllRead={() => {}}             /* opcional: lógica propia */
-      selected={selectedIds.length > 0}
+      selected={selectedIds}
       currentPage={currentPage}
       totalMails={totalMails}
       onPrevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}

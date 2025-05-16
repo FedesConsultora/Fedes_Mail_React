@@ -10,5 +10,15 @@
 @import 'composeButton';
 @import 'composeModal';
 @import 'userHeader';
-@import 'toast'
+@import 'toast';
+@import 'inbox';
 
+.o-livechat-LivechatButton {
+  display: none !important;
+}
+
+.o_mail_app_container .toast-container,
+.o_mail_app_container .toast {
+  z-index: 999999 !important;
+  position: fixed !important;
+}
