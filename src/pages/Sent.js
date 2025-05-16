@@ -4,6 +4,7 @@ import MailCard from '../components/MailCard';
 import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Sent() {
   const { user, loading } = useUser();
@@ -12,7 +13,7 @@ export default function Sent() {
   const [currentPage, setCurrentPage] = useState(1);
   const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
-
+  const { showToast } = useToast();
   /* ————— MARCAR COMO FAVORITO ————— */
   async function toggleFavorite(id, nuevoEstado) {
     try {
@@ -52,17 +53,20 @@ export default function Sent() {
   }
   /* --- carga de enviados --- */
   useEffect(() => {
-    if (!loading) {
-      api
-        .obtenerEnviados(currentPage, mailsPerPage)
-        .then((res) => {
-          setMails(Array.isArray(res?.emails) ? res.emails : []);
-          setTotalMails(typeof res?.total === 'number' ? res.total : 0);
-          setSelectedIds([]);
-        })
-        .catch(console.error);
-    }
-  }, [loading, currentPage]);
+  if (!loading && user && typeof user.email === 'string') {
+    api
+      .obtenerEnviados(currentPage, mailsPerPage)
+      .then(({ emails, total }) => {
+        setMails(emails);
+        setTotalMails(total);
+        setSelectedIds([]);
+      })
+      .catch((err) => {
+        console.error('❌ Error al cargar enviados:', err);
+        showToast({ message: '❌ Error al cargar enviados:', type: 'error' });
+      });
+  }
+}, [loading, user, currentPage]);
 
   // Elimina del estado local
   function eliminarCorreoLocal(id) {

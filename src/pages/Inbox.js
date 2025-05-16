@@ -87,19 +87,22 @@ export default function Inbox() {
 
 
   useEffect(() => {
-    if (user?.email) {
-      api
-        .obtenerInbox(user.email, currentPage, mailsPerPage)
-        .then((res) => {
-          const emails = Array.isArray(res?.emails) ? res.emails : [];
-          const total = typeof res?.total === 'number' ? res.total : emails.length;
+    if (!user || typeof user.email !== 'string') return;
 
-          setMails(emails);
-          setTotalMails(total);
-          setSelectedIds([]); // Limpiar selección al cambiar página
-        })
-        .catch(console.error);
-    }
+    api
+      .obtenerInbox(user.email, currentPage, mailsPerPage)
+      .then((res) => {
+        const emails = Array.isArray(res?.emails) ? res.emails : [];
+        const total = typeof res?.total === 'number' ? res.total : emails.length;
+
+        setMails(emails);
+        setTotalMails(total);
+        setSelectedIds([]);
+      })
+      .catch((err) => {
+        console.error('❌ Error al obtener inbox:', err);
+        showToast({ message: '❌ Error al cargar correos', type: 'error' });
+      });
   }, [user, currentPage]);
 
   const totalPages = Math.ceil(totalMails / mailsPerPage);

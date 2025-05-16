@@ -51,7 +51,7 @@ export default function ComposeModal({ onClose }) {
       showToast({ message: '📨 Correo enviado con éxito', type: 'success' });
       onClose();
     } else {
-      showToast({ message: '❌ Error al enviar: ${error}', type: 'error' });
+      showToast({ message: `❌ Error al enviar: ${error}`, type: 'error' });
     }
   };
 
