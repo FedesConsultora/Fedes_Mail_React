@@ -19,7 +19,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     if (path.includes('/sent')) return 'sent';
     if (path.includes('/starred')) return 'starred';
     if (path.includes('/spam')) return 'spam';
-    if (path.includes('/trash')) return 'spam';
+    if (path.includes('/trash')) return 'trash';
     return 'inbox';
   };
   const currentFolder = getCurrentFolder();

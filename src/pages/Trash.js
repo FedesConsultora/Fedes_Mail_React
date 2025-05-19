@@ -61,7 +61,7 @@ export default function Trash() {
             setMails((curr) => curr.filter((m) => !selectedIds.includes(m.id)));
             setSelectedIds([]);
             setTotalMails((prev) => Math.max(prev - selectedIds.length, 0));
-            showToast({ message: '🗑️ ${selectedIds.length} correo(s) eliminados', type: 'warning' });
+            showToast({ message: `🗑️ ${selectedIds.length} correo(s) eliminados`, type: 'warning' });
         })
         .catch((err) => {
             console.error('❌ Error al eliminar:', err);
@@ -78,10 +78,13 @@ export default function Trash() {
             setSelectedIds([]);
             setTotalMails((prev) => Math.max(0, prev - res.restored));
             showToast({ message: 'Correos restaurados correctamente ✅', type: 'success' });
-        } catch (err) {
-            console.error('❌ Error al restaurar:', err);
-            showToast({ message: 'Error al restaurar correos 😓', type: 'error' });
-        }
+        }   catch (err) {
+                const msg = err?.message?.includes('duplicate key value') 
+                    ? 'Algunos correos ya fueron restaurados anteriormente.'
+                    : 'Error al restaurar correos 😓';
+
+                showToast({ message: msg, type: 'error' });
+            }
     }
 
     const toggleSelectAll = () => {
