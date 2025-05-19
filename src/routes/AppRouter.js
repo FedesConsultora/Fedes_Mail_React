@@ -62,6 +62,14 @@ export default function AppRouter() {
             </MainLayout>
           }
         />
+        <Route
+          path="/trash/email/:id"
+          element={
+            <MainLayout>
+              <EmailDetail />
+            </MainLayout>
+          }
+        />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

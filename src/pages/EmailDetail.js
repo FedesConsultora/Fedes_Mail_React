@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMatch, useParams  } from 'react-router-dom';
+import { Navigate, useMatch, useParams  } from 'react-router-dom';
 import EmailToolbar from '../components/EmailToolbar';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
@@ -43,7 +43,7 @@ export default function EmailDetail() {
     try {
       await api.restoreMails([mail.id]);
       showToast({ message: '✅ Correo restaurado', type: 'success' });
-      navigate(`/${fromFolder}`);
+      Navigate(`/${fromFolder}`);
     } catch (err) {
       console.error('❌ Error al restaurar:', err);
       showToast({ message: '❌ No se pudo restaurar', type: 'error' });
