@@ -52,7 +52,9 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     const isInteractive = e.target.closest('input, button, .attachment-pill, .hover-actions');
     if (!isInteractive && mail.id) {
       if (!mail.is_read) onMarkRead(mail.id);
-      navigate(`${isSent ? '/sent' : ''}/email/${mail.id}`);
+      navigate(`${isSent ? '/sent' : ''}/email/${mail.id}`, {
+        state: { from: currentFolder }
+      });
     }
 
   };
@@ -76,7 +78,6 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
             const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
             if (res?.success) {
               onDeleteMail(mail.id);
-              showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
             }
           } catch (err) {
             console.error('❌ Error al eliminar correo:', err);

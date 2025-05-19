@@ -187,7 +187,20 @@ const api = {
     });
     const { restored = 0 } = await ensure(res);
     return ok({ restored });
+  },
+
+
+  async obtenerDetalleCorreoEliminado(id) {
+    const res = await fetch(`${apiBase}/trash_email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: id })
+    });
+    return await ensure(res);
   }
+
+
 };
 
 export default api;

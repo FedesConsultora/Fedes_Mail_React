@@ -1,64 +1,80 @@
-import React from 'react';
-import { FaArrowLeft, FaTrash, FaArchive, FaEnvelope } from 'react-icons/fa';
+// src/components/EmailToolbar.js
+import { FaArrowLeft, FaTrash, FaArchive, FaEnvelope, FaUndoAlt } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 export default function EmailToolbar({
   mailId,
-  showBack = true,
   isRead,
   onArchive,
   onMarkUnread,
+  onRestore
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showConfirmToast, showToast } = useToast();
 
-  // 🔍 Detección automática de carpeta
-  const getFolderFromPath = (pathname) => {
-    if (pathname.includes('/sent')) return 'sent';
-    if (pathname.includes('/starred')) return 'starred';
-    if (pathname.includes('/spam')) return 'spam';
-    return 'inbox';
-  };
+  const isTrash = location.pathname.includes('/trash');
+  const currentFolder = isTrash ? 'trash' : location.pathname.includes('/sent') ? 'sent' : 'inbox';
 
-  const currentFolder = getFolderFromPath(location.pathname);
-
-  const handleDelete = async () => {
-    try {
-      await api.deleteMails({
-        folder: currentFolder,
-        mail_ids: [mailId],
-      });
-      navigate(-1); // volver al listado anterior
-    } catch (err) {
-      console.error('❌ Error al eliminar desde el detalle:', err);
-      alert('Error al eliminar el correo');
-    }
+  const handleDelete = () => {
+    showConfirmToast({
+      message: '¿Eliminar este correo permanentemente?',
+      type: 'warning',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          await api.deleteMails({ folder: currentFolder, mail_ids: [mailId] });
+          showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
+          navigate('/trash');
+        } catch (err) {
+          console.error('❌ Error al eliminar:', err);
+          showToast({ message: '❌ No se pudo eliminar', type: 'error' });
+        }
+      }
+    });
   };
 
   return (
     <div className="inboxToolbar">
-      {showBack && (
-        <button className="toolbarIcon" onClick={() => navigate(-1)}>
-          <FaArrowLeft title="Volver" />
-        </button>
-      )}
+      <button className="toolbarIcon" onClick={() => navigate(-1)}>
+        <FaArrowLeft title="Volver" />
+      </button>
+
       <button className="toolbarIcon" onClick={handleDelete}>
         <FaTrash title="Eliminar" />
       </button>
-      <button className="toolbarIcon" onClick={onArchive}>
-        <FaArchive title="Archivar" />
-      </button>
-      <button
-        className="toolbarIcon"
-        onClick={onMarkUnread}
-        title={isRead ? 'Marcar como no leído' : 'Marcar como leído'}
-      >
-        <span className="icon-unread">
-          <FaEnvelope />
-          {isRead && <span className="unread-dot" />}
-        </span>
-      </button>
+
+      {!isTrash && onArchive && (
+        <button className="toolbarIcon" onClick={onArchive}>
+          <FaArchive title="Archivar" />
+        </button>
+      )}
+
+      {!isTrash && onMarkUnread && (
+        <button
+          className="toolbarIcon"
+          onClick={onMarkUnread}
+          title={isRead ? 'Marcar como no leído' : 'Marcar como leído'}
+        >
+          <span className="icon-unread">
+            <FaEnvelope />
+            {isRead && <span className="unread-dot" />}
+          </span>
+        </button>
+      )}
+
+      {isTrash && onRestore && (
+        <button
+          className="toolbarIcon"
+          onClick={onRestore}
+          title="Restaurar correo"
+        >
+          <FaUndoAlt />
+        </button>
+      )}
     </div>
   );
 }

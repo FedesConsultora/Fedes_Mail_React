@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMatch, useParams  } from 'react-router-dom';
 import EmailToolbar from '../components/EmailToolbar';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
 import api from '../services/api';
-
+import { useToast } from '../contexts/ToastContext';
+import { useLocation } from 'react-router-dom';
 export default function EmailDetail() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
@@ -13,7 +14,12 @@ export default function EmailDetail() {
   const [mail, setMail] = useState(null);
   const matchSent = useMatch('/sent/email/:id');
   const isSent = Boolean(matchSent);
-  
+  const matchTrash = useMatch('/trash/email/:id');
+  const isTrash = Boolean(matchTrash);
+  const { showToast } = useToast();
+  const location = useLocation();
+  const fromFolder = location.state?.from || 'inbox';
+
   async function toggleLecturaDetalle() {
     try {
       const nuevoEstado = !mail.is_read;
@@ -33,10 +39,22 @@ export default function EmailDetail() {
       alert('No se pudo cambiar el estado del correo.');
     }
   }
-
+  async function restaurarCorreo() {
+    try {
+      await api.restoreMails([mail.id]);
+      showToast({ message: '✅ Correo restaurado', type: 'success' });
+      navigate(`/${fromFolder}`);
+    } catch (err) {
+      console.error('❌ Error al restaurar:', err);
+      showToast({ message: '❌ No se pudo restaurar', type: 'error' });
+    }
+  }
   useEffect(() => {
-    const obtener = isSent ? api.obtenerDetalleCorreoEnviado
-                          : api.obtenerDetalleCorreo;
+    const obtener = isSent
+          ? api.obtenerDetalleCorreoEnviado
+          : isTrash
+            ? api.obtenerDetalleCorreoEliminado
+            : api.obtenerDetalleCorreo;
 
     obtener(+id).then(m => {
         console.log('[EmailDetail] setMail', m);
@@ -77,10 +95,10 @@ export default function EmailDetail() {
       <SearchAndFilters />
       <EmailToolbar
         mailId={Number(id)}
-        onDelete={() => alert('Eliminar')}
-        onArchive={() => alert('Archivar')}
-        onMarkUnread={toggleLecturaDetalle}
         isRead={mail.is_read}
+        onArchive={!isTrash ? () => alert('Archivar') : undefined}
+        onMarkUnread={!isTrash ? toggleLecturaDetalle : undefined}
+        onRestore={isTrash ? restaurarCorreo : undefined}
       />
 
       <div className="email-detail">
