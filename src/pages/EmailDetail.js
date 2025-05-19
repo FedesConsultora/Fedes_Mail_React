@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useMatch, useParams  } from 'react-router-dom';
+import { useMatch, useNavigate, useParams  } from 'react-router-dom';
 import EmailToolbar from '../components/EmailToolbar';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
@@ -19,7 +19,7 @@ export default function EmailDetail() {
   const { showToast } = useToast();
   const location = useLocation();
   const fromFolder = location.state?.from || 'inbox';
-
+  const navigate = useNavigate();
   async function toggleLecturaDetalle() {
     try {
       const nuevoEstado = !mail.is_read;
@@ -43,7 +43,7 @@ export default function EmailDetail() {
     try {
       await api.restoreMails([mail.id]);
       showToast({ message: '✅ Correo restaurado', type: 'success' });
-      Navigate(`/${fromFolder}`);
+      navigate(`/${fromFolder}`);
     } catch (err) {
       console.error('❌ Error al restaurar:', err);
       showToast({ message: '❌ No se pudo restaurar', type: 'error' });

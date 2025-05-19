@@ -10,10 +10,19 @@ import {
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
-const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, onDeleteMail = () => {},  }) => {
+const MailCard = ({
+  mail = {},
+  selected = false,
+  onToggle = () => {},
+  isSent = false,
+  onMarkRead = () => {},
+  onToggleFavorite = () => {},
+  onDeleteMail = () => {},
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast, showConfirmToast } = useToast();
+
   const getCurrentFolder = () => {
     const path = location.pathname;
     if (path.includes('/sent')) return 'sent';
@@ -22,6 +31,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     if (path.includes('/trash')) return 'trash';
     return 'inbox';
   };
+
   const currentFolder = getCurrentFolder();
 
   const isToday = (dateStr) => {
@@ -35,11 +45,6 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     );
   };
 
-  const handleToggleFavorite = (e) => {
-    e.stopPropagation(); 
-    onToggleFavorite(mail.id, !mail.favorite); 
-  };
-
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -48,20 +53,30 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
       : date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
   };
 
+  const handleToggleFavorite = (e) => {
+    e.stopPropagation();
+    onToggleFavorite(mail.id, !mail.favorite);
+  };
+
   const handleClick = (e) => {
     const isInteractive = e.target.closest('input, button, .attachment-pill, .hover-actions');
     if (!isInteractive && mail.id) {
       if (!mail.is_read) onMarkRead(mail.id);
-      navigate(`${isSent ? '/sent' : ''}/email/${mail.id}`, {
-        state: { from: currentFolder }
-      });
-    }
 
+      const rutaDestino =
+        currentFolder === 'sent'
+          ? `/sent/email/${mail.id}`
+          : currentFolder === 'trash'
+            ? `/trash/email/${mail.id}`
+            : `/email/${mail.id}`;
+
+      navigate(rutaDestino, { state: { from: currentFolder } });
+    }
   };
 
   const handleMarkReadClick = (e) => {
-    e.stopPropagation(); 
-    onMarkRead(mail.id, !mail.is_read);  // ← Cambia el estado, no solo lo marca leído
+    e.stopPropagation();
+    onMarkRead(mail.id, !mail.is_read);
   };
 
   const handleDelete = async (e) => {
@@ -87,7 +102,6 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
       });
     }
 
-    // 🟡 NUEVO: para inbox/sent/spam → mover a papelera
     try {
       const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
       if (res?.success) {
@@ -104,7 +118,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     e.stopPropagation();
     try {
       await api.restoreMails([mail.id]);
-      onDeleteMail(mail.id); // reutilizamos la lógica para quitarlo
+      onDeleteMail(mail.id);
       showToast({ message: '♻️ Correo restaurado', type: 'success' });
     } catch (err) {
       showToast({ message: '❌ No se pudo restaurar', type: 'error' });
@@ -164,7 +178,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
             onClick={handleMarkReadClick}
           >
             <FaEnvelope />
-            {mail.is_read && <span className="dot" />} 
+            {mail.is_read && <span className="dot" />}
           </button>
         </div>
       </div>
