@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope } from 'react-icons/fa';
+import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope, FaUndoAlt } from 'react-icons/fa';
 import {
   AiFillFilePdf,
   AiFillFileImage,
@@ -19,6 +19,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     if (path.includes('/sent')) return 'sent';
     if (path.includes('/starred')) return 'starred';
     if (path.includes('/spam')) return 'spam';
+    if (path.includes('/trash')) return 'spam';
     return 'inbox';
   };
   const currentFolder = getCurrentFolder();
@@ -63,22 +64,36 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
 
   const handleDelete = async (e) => {
     e.stopPropagation();
+
+    if (currentFolder === 'trash') {
+      const confirmar = window.confirm('⚠️ Este correo se eliminará definitivamente. ¿Estás seguro?');
+      if (!confirmar) return;
+    }
+
     try {
       const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
-
-      // Solo si todo salió bien
       if (res?.success || res?.ok !== false) {
         onDeleteMail(mail.id);
-        showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
-
+        if (currentFolder !== 'trash') {
+          showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
+        }
       } else {
         throw new Error('Respuesta no válida del servidor');
       }
-
     } catch (err) {
       console.error('❌ Error al eliminar correo:', err);
       showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
+    }
+  };
 
+  const handleRestore = async (e) => {
+    e.stopPropagation();
+    try {
+      await api.restoreMails([mail.id]);
+      onDeleteMail(mail.id); // reutilizamos la lógica para quitarlo
+      showToast({ message: '♻️ Correo restaurado', type: 'success' });
+    } catch (err) {
+      showToast({ message: '❌ No se pudo restaurar', type: 'error' });
     }
   };
 
@@ -123,6 +138,11 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
           <button title="Eliminar" onClick={handleDelete}>
             <FaTrash />
           </button>
+          {currentFolder === 'trash' && (
+            <button title="Restaurar" onClick={handleRestore}>
+              <FaUndoAlt />
+            </button>
+          )}
           <button title="Archivar"><FaArchive /></button>
           <button
             title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}

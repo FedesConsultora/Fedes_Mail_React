@@ -146,7 +146,27 @@ export default function Inbox() {
     setTotalMails(prev => Math.max(prev - 1, 0));
     showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
   }
+  // NUEVO: eliminar múltiples
+  async function eliminarSeleccionados() {
+    if (!selectedIds.length) return;
 
+    try {
+      const res = await api.deleteMails({ folder: 'inbox', mail_ids: selectedIds });
+
+      if (res?.deleted > 0) {
+        setMails(curr => curr.filter(m => !selectedIds.includes(m.id)));
+        setSelectedIds([]);
+        setTotalMails(prev => Math.max(prev - res.deleted, 0));
+        showToast({ message: `🗑️ ${res.deleted} correo(s) eliminados`, type: 'warning' });
+      } else {
+        showToast({ message: '⚠️ No se eliminaron correos', type: 'info' });
+      }
+
+    } catch (err) {
+      console.error('❌ Error al eliminar múltiples:', err);
+      showToast({ message: '❌ Error al eliminar correos seleccionados', type: 'error' });
+    }
+  }
   const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
   //const isAnySelected = selectedIds.length > 0;
@@ -175,6 +195,7 @@ export default function Inbox() {
       currentPage={currentPage}
       totalMails={totalMails}
       onReload={recargarInbox}
+      onDeleteMultiple={eliminarSeleccionados}
       onToggleRead={toggleLecturaSeleccionados}
       onPrevPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
       onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}

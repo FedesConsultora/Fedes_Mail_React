@@ -144,7 +144,7 @@ export default function Trash() {
             allSelected={isAllSelected}
             someSelected={isSomeSelected}
             onSelectAll={toggleSelectAll}
-            selected={isAnySelected}
+            selected={selectedIds}
             isRead={todosLeidos}
             currentPage={currentPage}
             totalMails={totalMails}
