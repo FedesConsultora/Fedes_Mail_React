@@ -111,7 +111,7 @@ export default function ComposeModal({ onClose }) {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragging]);
+  }, [dragging, handleMouseMove]);
 
   return (
     <div className="compose-modal">

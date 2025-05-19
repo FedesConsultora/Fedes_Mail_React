@@ -29,7 +29,7 @@ export default function UserProvider({ children }) {
         showToast({ message: '❌ Error al obtener datos del usuario.', type: 'error' });
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [showToast]);
 
   return (
     <UserContext.Provider value={{ user, loading }}>

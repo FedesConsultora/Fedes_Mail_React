@@ -14,7 +14,7 @@
     const mailsPerPage = 50;
     const [totalMails, setTotalMails] = useState(0);
     const [loadingMails, setLoadingMails] = useState(true);
-    const { showToast, showConfirmToast } = useToast();
+    const { showToast } = useToast();
     const location = useLocation();
     const currentFolder = location.pathname.includes('/trash') ? 'trash' : 'inbox';
     // MARCAR COMO FAVORITO

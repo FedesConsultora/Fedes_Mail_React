@@ -6,7 +6,7 @@ import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
 
 export default function Trash() {
-    const { user, loading } = useUser();
+    const { loading } = useUser();
     const [mails, setMails] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -110,7 +110,6 @@ export default function Trash() {
 
     const isAllSelected = selectedIds.length === mails.length && mails.length > 0;
     const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
-    const isAnySelected = selectedIds.length > 0;
 
     const todosLeidos = selectedIds.length > 0 &&
         selectedIds.every(id => {
