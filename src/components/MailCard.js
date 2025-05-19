@@ -13,7 +13,7 @@ import { useToast } from '../contexts/ToastContext';
 const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = false, onMarkRead = () => {}, onToggleFavorite = () => {}, onDeleteMail = () => {},  }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { showToast } = useToast();
+  const { showToast, showConfirmToast } = useToast();
   const getCurrentFolder = () => {
     const path = location.pathname;
     if (path.includes('/sent')) return 'sent';
@@ -66,7 +66,7 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     e.stopPropagation();
 
     if (currentFolder === 'trash') {
-      return showToast({
+      return showConfirmToast({
         message: '¿Eliminar definitivamente este correo?',
         type: 'warning',
         confirmText: 'Eliminar',
@@ -86,6 +86,17 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
       });
     }
 
+    // 🟡 NUEVO: para inbox/sent/spam → mover a papelera
+    try {
+      const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
+      if (res?.success) {
+        onDeleteMail(mail.id);
+        showToast({ message: '🗑️ Correo movido a la papelera', type: 'warning' });
+      }
+    } catch (err) {
+      console.error('❌ Error al mover a papelera:', err);
+      showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
+    }
   };
 
   const handleRestore = async (e) => {

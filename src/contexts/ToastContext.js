@@ -46,10 +46,10 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ showToast, showConfirmToast }}>
         {children}
         <div className="fedes-toast-container">
-        {toasts.map((toast) => (
+        {toasts.map(({ id, ...rest }) => (
             <Toast
-                key={toast.id}
-                 {...toast}
+                key={id}
+                {...rest}
                 onClose={() => removeToast(id)}
             />
         ))}

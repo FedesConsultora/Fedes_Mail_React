@@ -12,7 +12,7 @@ export default function Trash() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalMails, setTotalMails] = useState(0);
     const mailsPerPage = 50;
-    const { showToast } = useToast();
+    const { showToast, showConfirmToast } = useToast();
     useEffect(() => {
         if (!loading) {
         api
@@ -56,7 +56,7 @@ export default function Trash() {
     function eliminarSeleccionados() {
         if (!selectedIds.length) return;
 
-        showToast({
+        showConfirmToast({
             message: `¿Eliminar <strong>${selectedIds.length}</strong> correo(s) definitivamente?`,
             type: 'warning',
             confirmText: 'Eliminar',
@@ -67,7 +67,7 @@ export default function Trash() {
                     setMails((curr) => curr.filter((m) => !selectedIds.includes(m.id)));
                     setSelectedIds([]);
                     setTotalMails((prev) => Math.max(prev - selectedIds.length, 0));
-                    showToast({ message: `🗑️ ${selectedIds.length} correo(s) eliminados`, type: 'warning' });
+                showToast({ message: `🗑️ ${selectedIds.length} correo(s) eliminados`, type: 'warning' });
                 } catch (err) {
                     console.error('❌ Error al eliminar:', err);
                     showToast({ message: '❌ Error al eliminar correos.', type: 'error' });
