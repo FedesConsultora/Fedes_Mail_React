@@ -7,6 +7,7 @@ import NotFound from '../pages/NotFound';
 import Sent from '../pages/Sent';     
 import Starred from '../pages/Starred';
 import Trash from '../pages/Trash';
+import Spam from '../pages/Spam';
 
 export default function AppRouter() {
   return (
@@ -67,6 +68,16 @@ export default function AppRouter() {
           element={
             <MainLayout>
               <EmailDetail />
+            </MainLayout>
+          }
+        />
+
+        
+        <Route
+          path="/spam"
+          element={
+            <MainLayout>
+              <Spam />
             </MainLayout>
           }
         />

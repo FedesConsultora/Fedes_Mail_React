@@ -1,5 +1,6 @@
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope, FaUndoAlt } from 'react-icons/fa';
+import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope, FaUndoAlt, FaExclamationCircle } from 'react-icons/fa';
 import {
   AiFillFilePdf,
   AiFillFileImage,
@@ -67,8 +68,8 @@ const MailCard = ({
         currentFolder === 'sent'
           ? `/sent/email/${mail.id}`
           : currentFolder === 'trash'
-            ? `/trash/email/${mail.id}`
-            : `/email/${mail.id}`;
+          ? `/trash/email/${mail.id}`
+          : `/email/${mail.id}`;
 
       navigate(rutaDestino, { state: { from: currentFolder } });
     }
@@ -114,6 +115,36 @@ const MailCard = ({
     }
   };
 
+  const handleMarkAsSpam = async (e) => {
+    e.stopPropagation();
+    try {
+      await api.marcarComoSpam([mail.id]);
+      onDeleteMail(mail.id);
+      showToast({ message: '🚫 Correo marcado como spam', type: 'warning' });
+    } catch (err) {
+      showToast({ message: '❌ No se pudo mover a spam', type: 'error' });
+    }
+  };
+
+  const handleUnmarkSpam = async (e) => {
+    e.stopPropagation();
+    showConfirmToast({
+      message: '¿Sacar este correo de la carpeta Spam?',
+      type: 'warning',
+      confirmText: 'Sí, sacar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          await api.marcarComoNoSpam([mail.id]);
+          onDeleteMail(mail.id);
+          showToast({ message: '📥 Correo movido a Recibidos', type: 'success' });
+        } catch (err) {
+          showToast({ message: '❌ No se pudo sacar de spam', type: 'error' });
+        }
+      }
+    });
+  };
+
   const handleRestore = async (e) => {
     e.stopPropagation();
     try {
@@ -153,9 +184,7 @@ const MailCard = ({
           <span
             className="mail-snippet"
             dangerouslySetInnerHTML={{
-              __html: typeof mail.contenido === 'string'
-                ? mail.contenido.slice(0, 80)
-                : ''
+              __html: typeof mail.contenido === 'string' ? mail.contenido.slice(0, 80) : ''
             }}
           />
         </div>
@@ -171,7 +200,18 @@ const MailCard = ({
               <FaUndoAlt />
             </button>
           )}
-          <button title="Archivar"><FaArchive /></button>
+          {currentFolder !== 'spam' ? (
+            <button title="Marcar como spam" onClick={handleMarkAsSpam}>
+              <FaExclamationCircle />
+            </button>
+          ) : (
+            <button title="Sacar de Spam" onClick={handleUnmarkSpam}>
+              <FaUndoAlt />
+            </button>
+          )}
+          <button title="Archivar">
+            <FaArchive />
+          </button>
           <button
             title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}
             className="unread-icon"

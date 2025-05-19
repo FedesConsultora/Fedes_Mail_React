@@ -6,6 +6,8 @@ import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons
 import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 import { useLocation } from 'react-router-dom';
+
+
 export default function EmailDetail() {
   const { id } = useParams();
   const [user, setUser] = useState(null);
@@ -20,6 +22,8 @@ export default function EmailDetail() {
   const location = useLocation();
   const fromFolder = location.state?.from || 'inbox';
   const navigate = useNavigate();
+
+
   async function toggleLecturaDetalle() {
     try {
       const nuevoEstado = !mail.is_read;
@@ -41,7 +45,8 @@ export default function EmailDetail() {
   }
   async function restaurarCorreo() {
     try {
-      await api.restoreMails([mail.id]);
+      console.log('♻️ Restaurando ID:', mail.id);
+      await api.restoreMails([Number(mail.id)].filter(Boolean));
       showToast({ message: '✅ Correo restaurado', type: 'success' });
       navigate(`/${fromFolder}`);
     } catch (err) {

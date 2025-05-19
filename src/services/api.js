@@ -198,9 +198,43 @@ const api = {
       body: JSON.stringify({ mail_id: id })
     });
     return await ensure(res);
+  },
+
+  async marcarComoSpam(mail_ids = []) {
+    const res = await fetch(`${apiBase}/mark_spam`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_ids })
+    });
+
+    const { marcados = 0 } = await ensure(res);
+    return ok({ marcados });
+  },
+
+  async marcarComoNoSpam(mail_ids = []) {
+    const res = await fetch(`${apiBase}/mark_not_spam`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_ids })
+    });
+
+    const { marcados = 0 } = await ensure(res);
+    return ok({ marcados });
+  },
+
+  async obtenerSpam(page = 1, limit = 50) {
+    const res = await fetch(`${apiBase}/spam`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ page, limit })
+    });
+
+    const { emails = [], total = 0 } = await ensure(res);
+    return { emails, total };
   }
-
-
 };
 
 export default api;
