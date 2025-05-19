@@ -56,16 +56,23 @@ export default function Trash() {
     function eliminarSeleccionados() {
         if (!selectedIds.length) return;
 
-        api.deleteMails({ folder: 'trash', mail_ids: selectedIds })
-        .then(() => {
-            setMails((curr) => curr.filter((m) => !selectedIds.includes(m.id)));
-            setSelectedIds([]);
-            setTotalMails((prev) => Math.max(prev - selectedIds.length, 0));
-            showToast({ message: `🗑️ ${selectedIds.length} correo(s) eliminados`, type: 'warning' });
-        })
-        .catch((err) => {
-            console.error('❌ Error al eliminar:', err);
-            showToast({ message: '❌ Error al eliminar correos.', type: 'error' });
+        showToast({
+            message: `¿Eliminar <strong>${selectedIds.length}</strong> correo(s) definitivamente?`,
+            type: 'warning',
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar',
+            onConfirm: async () => {
+                try {
+                    await api.deleteMails({ folder: 'trash', mail_ids: selectedIds });
+                    setMails((curr) => curr.filter((m) => !selectedIds.includes(m.id)));
+                    setSelectedIds([]);
+                    setTotalMails((prev) => Math.max(prev - selectedIds.length, 0));
+                    showToast({ message: `🗑️ ${selectedIds.length} correo(s) eliminados`, type: 'warning' });
+                } catch (err) {
+                    console.error('❌ Error al eliminar:', err);
+                    showToast({ message: '❌ Error al eliminar correos.', type: 'error' });
+                }
+            }
         });
     }
     async function restaurarSeleccionados() {

@@ -16,22 +16,41 @@ export function ToastProvider({ children }) {
         console.log('📢 Mostrando toast:', { message, type });
         setToasts((prev) => [...prev, { id, message, type, duration }]);
     };
+    const showConfirmToast = ({ message, onConfirm, onCancel, confirmText = "Sí", cancelText = "No", type = "warning" }) => {
+        const id = Date.now();
+        const toast = {
+            id,
+            message,
+            type,
+            confirmText,
+            cancelText,
+            isConfirm: true,
+            onConfirm: () => {
+                removeToast(id);
+                onConfirm?.();
+            },
+            onCancel: () => {
+                removeToast(id);
+                onCancel?.();
+            }
+        };
+        
+        setToasts((prev) => [...prev, toast]);
+    };
 
     const removeToast = (id) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     };
 
     return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, showConfirmToast }}>
         {children}
         <div className="fedes-toast-container">
-        {toasts.map(({ id, message, type, duration }) => (
+        {toasts.map((toast) => (
             <Toast
-                key={id}
-                message={message}
-                type={type}
+                key={toast.id}
+                 {...toast}
                 onClose={() => removeToast(id)}
-                duration={duration}
             />
         ))}
         </div>

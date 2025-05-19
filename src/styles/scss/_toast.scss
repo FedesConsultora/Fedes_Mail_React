@@ -9,68 +9,113 @@
   gap: 0.5rem;
   width: auto;
   max-width: 100vw;
-  
-    .toast{
-        pointer-events: auto;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        background-color: #333;
-        color: #fff;
-        padding: 10px 16px;
-        border-radius: 8px;
-        font-size: 14px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        min-width: 260px;
-        max-width: 320px;
-        animation: fadeInOut 3s ease forwards;
-        position: relative;
 
-        &-icon {
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-        }
+  .toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: #333;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 260px;
+    max-width: 320px;
+    animation: fadeInOut 3s ease forwards;
+    position: relative;
 
-        &-message {
-            flex: 1;
-            line-height: 1.3;
-        }
-
-        &-close {
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-        }
-
-        &.success {
-            background-color: #28a745;
-            
-        }
-
-        &.error {
-            background-color: #dc3545;
-        }
-
-        &.warning {
-            background-color: #ffc107;
-            color: #333;
-        }
-
-        &.info {
-            background-color: #17a2b8;
-        }
+    &-icon {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
     }
+
+    &-message {
+      flex: 1;
+      line-height: 1.3;
+    }
+
+    &-close {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    &.success {
+      background-color: #28a745;
+    }
+
+    &.error {
+      background-color: #dc3545;
+    }
+
+    &.warning {
+      background-color: #ffc107;
+      color: #333;
+    }
+
+    &.info {
+      background-color: #17a2b8;
+    }
+
+    // ✅ Confirmación
+    &-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    .toast-btn {
+      font-size: 13px;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+
+      &.cancel {
+        background-color: #6c757d;
+        color: white;
+
+        &:hover {
+          background-color: #5a6268;
+        }
+      }
+
+      &.confirm {
+        background-color: #dc3545;
+        color: white;
+
+        &:hover {
+          background-color: #c82333;
+        }
+      }
+    }
+  }
 }
 
 @keyframes fadeInOut {
-  0%   { opacity: 0; transform: translateY(-10px); }
-  10%  { opacity: 1; transform: translateY(0); }
-  90%  { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-10px); }
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 }

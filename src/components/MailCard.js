@@ -66,24 +66,26 @@ const MailCard = ({ mail = {}, selected = false, onToggle = () => {}, isSent = f
     e.stopPropagation();
 
     if (currentFolder === 'trash') {
-      const confirmar = window.confirm('⚠️ Este correo se eliminará definitivamente. ¿Estás seguro?');
-      if (!confirmar) return;
+      return showToast({
+        message: '¿Eliminar definitivamente este correo?',
+        type: 'warning',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        onConfirm: async () => {
+          try {
+            const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
+            if (res?.success) {
+              onDeleteMail(mail.id);
+              showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
+            }
+          } catch (err) {
+            console.error('❌ Error al eliminar correo:', err);
+            showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
+          }
+        }
+      });
     }
 
-    try {
-      const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
-      if (res?.success || res?.ok !== false) {
-        onDeleteMail(mail.id);
-        if (currentFolder !== 'trash') {
-          showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
-        }
-      } else {
-        throw new Error('Respuesta no válida del servidor');
-      }
-    } catch (err) {
-      console.error('❌ Error al eliminar correo:', err);
-      showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
-    }
   };
 
   const handleRestore = async (e) => {
