@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaInbox, FaPaperPlane, FaStar, FaCog } from 'react-icons/fa';
+import { FaInbox, FaPaperPlane, FaStar, FaTrash, FaCog } from 'react-icons/fa';
 import ComposeButton from '../ComposeButton';
 import ComposeModal from '../ComposeModal';
 
@@ -33,6 +33,11 @@ export default function Sidebar({ isCollapsed }) {
             <li>
               <NavLink to="/starred" className={({ isActive }) => isActive ? 'active' : ''}>
                 <FaStar /> {!isCollapsed && <span>Destacados</span>}
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/trash" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FaTrash /> {!isCollapsed && <span>Papelera</span>}
               </NavLink>
             </li>
           </ul>
