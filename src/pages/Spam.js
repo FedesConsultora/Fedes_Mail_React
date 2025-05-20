@@ -39,8 +39,8 @@ export default function Spam() {
   ──────────────────────────────────────────────── */
   useEffect(() => {
     if (!user || typeof user.email !== 'string') return;
-    recargarSpam();                      // reutilizamos la misma función
-  }, [user, currentPage]);               // ← showToast ya se usa dentro
+    recargarSpam();                     
+  }, [user, currentPage]);               
 
   /* ────────────────────────────────────────────────
      Helpers de selección / estado / borrado

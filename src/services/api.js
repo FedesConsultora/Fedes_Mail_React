@@ -77,12 +77,13 @@ const api = {
   },
 
   /* ---------- Enviar ---------- */
-  async enviarCorreo({ to, subject, html, text }) {
+  async enviarCorreo({ to, subject, html, text, attachments = [] }) {
     const body = {
       destinatario: to,
       asunto     : subject,
       cuerpo_html: html,
-      cuerpo_text: text || html.replace(/<[^>]*>/g, '')
+      cuerpo_text: text || html.replace(/<[^>]*>/g, ''),
+      adjuntos   : attachments  
     };
 
     const res  = await fetch(`${apiBase}/enviar_correo`, {

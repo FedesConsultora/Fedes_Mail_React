@@ -1,195 +1,202 @@
 import { useEffect, useState } from 'react';
-import { useMatch, useNavigate, useParams  } from 'react-router-dom';
-import EmailToolbar from '../components/EmailToolbar';
-import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
-import { FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt } from 'react-icons/fa';
-import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
-import { useLocation } from 'react-router-dom';
+import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
+import {
+  FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt,
+  FaPaperclip, FaFileAlt
+} from 'react-icons/fa';
+import EmailToolbar      from '../components/EmailToolbar';
+import SearchAndFilters  from '../components/SearchAndFilters/SearchAndFilters';
+import api               from '../services/api';
+import { useToast }      from '../contexts/ToastContext';
 
+/* ─── helpers para adjuntos ────────────────────────────────────────── */
+const fmtSize = kb => `${kb.replace(' KB','')} KB`;
 
-export default function EmailDetail() {
-  const { id } = useParams();
-  const [user, setUser] = useState(null);
+const iconByMime = m => m?.startsWith('image/')
+  ? <FaPaperclip/> : <FaFileAlt/>;
+
+/* ──────────────────────────────────────────────────────────────────── */
+export default function EmailDetail () {
+  /* ---------- hooks ---------- */
+  const { id }          = useParams();              // id numérico
+  const location        = useLocation();
+  const fromFolder      = location.state?.from || 'inbox';
+  const nav             = useNavigate();
+  const { showToast }   = useToast();
+
+  const isSent  = Boolean(useMatch('/sent/email/:id'));
+  const isTrash = Boolean(useMatch('/trash/email/:id'));
+
+  /* ---------- estado ---------- */
+  const [mail , setMail ] = useState(null);
+  const [user , setUser ] = useState(null);
   const [event, setEvent] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [mail, setMail] = useState(null);
-  const matchSent = useMatch('/sent/email/:id');
-  const isSent = Boolean(matchSent);
-  const matchTrash = useMatch('/trash/email/:id');
-  const isTrash = Boolean(matchTrash);
-  const { showToast } = useToast();
-  const location = useLocation();
-  const fromFolder = location.state?.from || 'inbox';
-  const navigate = useNavigate();
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
+  /* ---------- GET detalle ---------- */
+  useEffect(() => {
+    const fn = isSent
+      ? api.obtenerDetalleCorreoEnviado
+      : isTrash
+        ? api.obtenerDetalleCorreoEliminado
+        : api.obtenerDetalleCorreo;
 
-  async function toggleLecturaDetalle() {
-    try {
-      const nuevoEstado = !mail.is_read;
-      await api.setState({
-        folder: 'inbox',
-        mail_ids: [mail.id],
-        state: { is_read: nuevoEstado }
+    fn(+id)
+      .then(setMail)
+      .catch(e=>{
+        console.error(e);
+        showToast({message:'❌ No se pudo cargar el correo',type:'error'});
       });
+  }, [id,isSent,isTrash,showToast]);
 
-      setMail((prev) => ({
-        ...prev,
-        is_read: nuevoEstado,
-        state: nuevoEstado ? 'read' : 'unread'
-      }));
-    } catch (err) {
-      console.error('❌ Error al cambiar estado en detalle:', err);
-      alert('No se pudo cambiar el estado del correo.');
-    }
-  }
-  async function restaurarCorreo() {
-    try {
-      console.log('♻️ Restaurando ID:', mail.id);
-      await api.restoreMails([Number(mail.id)].filter(Boolean));
-      showToast({ message: '✅ Correo restaurado', type: 'success' });
-      navigate(`/${fromFolder}`);
-    } catch (err) {
-      console.error('❌ Error al restaurar:', err);
-      showToast({ message: '❌ No se pudo restaurar', type: 'error' });
-    }
-  }
+  /* ---------- normalizar datos remitente & mock evento ---------- */
   useEffect(() => {
-    const obtener = isSent
-          ? api.obtenerDetalleCorreoEnviado
-          : isTrash
-            ? api.obtenerDetalleCorreoEliminado
-            : api.obtenerDetalleCorreo;
-
-    obtener(+id).then(m => {
-        console.log('[EmailDetail] setMail', m);
-        setMail(m);
-    })
-    .catch(err => console.error('❌ detalle:', err));
-  }, [id, isSent]);
-
-  useEffect(() => {
-    if (!mail) return;
+    if(!mail) return;
 
     setUser({
-      name: mail.senderName,
-      email: mail.senderEmail,
-      image_url: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y',
-      domain: mail.domain,
-      signed_by: mail.signedBy,
-      security: mail.security,
+      name     : mail.senderName,
+      email    : mail.senderEmail,
+      domain   : mail.domain,
+      signedBy : mail.signedBy,
+      security : mail.security,
+      avatar   : 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
     });
 
-    // Mock: en el futuro podrías traer el evento real por asunto
-    setEvent({
-      title: 'REU - Depto Diseño',
-      start: '2025-04-02T11:30:00',
-      end: '2025-04-02T12:00:00',
-      status: 'cancelled',
-      videocall_url: 'https://meet.google.com/xyz-abc-def',
-      location: 'Sala 1 - Oficina Fedes',
-    });
+    /*  Sólo mock hasta que llegue un parser de ICS: */
+    if(mail.subject?.toLowerCase().includes('reu')){
+      setEvent({
+        title  : 'REU - Depto Diseño',
+        start  : '2025-04-02T11:30:00',
+        end    : '2025-04-02T12:00:00',
+        status : 'cancelled',
+        videocall_url : 'https://meet.google.com/xyz-abc-def',
+        location      : 'Sala 1 - Oficina Fedes',
+      });
+    } else { setEvent(null); }
   }, [mail]);
 
-  if (!mail) {
-    return <div className="inboxContainer">Cargando correo...</div>;
+  /* ---------- callbacks toolbar ---------- */
+  const toggleRead = async (nuevo) => {
+    try {
+      await api.setState({folder:fromFolder, mail_ids:[mail.id], state:{is_read:nuevo}});
+      setMail(m=>({...m,is_read:nuevo,state:nuevo?'read':'unread'}));
+    } catch(e){
+      showToast({message:'❌ No se pudo actualizar',type:'error'});
+    }
+  };
+
+  const restore = async () => {
+    try{
+      await api.restoreMails([mail.id]);
+      showToast({message:'♻️ Correo restaurado',type:'success'});
+      nav(`/${fromFolder}`);
+    }catch(e){
+      showToast({message:'❌ No se pudo restaurar',type:'error'});
+    }
+  };
+
+  /* ---------- loading ---------- */
+  if(!mail){
+    return(<div className="inboxContainer"><p>Cargando correo…</p></div>);
   }
 
+  /* ---------- render ---------- */
   return (
     <div className="inboxContainer">
-      <SearchAndFilters />
+      <SearchAndFilters/>
+
       <EmailToolbar
-        mailId={Number(id)}
+        mailId={mail.id}
         isRead={mail.is_read}
-        onArchive={!isTrash ? () => alert('Archivar') : undefined}
-        onMarkUnread={!isTrash ? toggleLecturaDetalle : undefined}
-        onRestore={isTrash ? restaurarCorreo : undefined}
+        onToggleRead={!isTrash ? toggleRead : undefined}
+        onArchive   ={!isTrash ? ()=>alert('Archivar') : undefined}
+        onRestore   ={ isTrash ? restore       : undefined}
       />
 
       <div className="email-detail">
         <h2 className="subject">{mail.subject}</h2>
 
+        {/* -------- remitente -------- */}
         {user && (
           <div className="sender-row">
-            <img src={user.image_url} alt="Remitente" className="profile-pic" />
+            <img src={user.avatar} alt="" className="profile-pic"/>
             <div className="sender-info">
               <span className="email-sender">{user.email}</span>
               <div className="para-line">
                 <span>Para: {mail.recipients}</span>
-                <button className="toggle-details" onClick={() => setShowDetails(prev => !prev)}>
-                  {showDetails ? <FaChevronUp /> : <FaChevronDown />}
+                <button
+                  className="toggle-details"
+                  onClick={()=>setDetailsOpen(o=>!o)}
+                  aria-label="toggle details"
+                >
+                  {detailsOpen ? <FaChevronUp/> : <FaChevronDown/>}
                 </button>
               </div>
 
-              {showDetails && (
+              {detailsOpen && (
                 <div className="mail-details-dropdown">
-                  <p><strong>De:</strong> {user.name} &lt;{user.email}&gt;</p>
-                  <p><strong>Responder a:</strong> {user.name} &lt;{user.email}&gt;</p>
-                  <p><strong>Para:</strong> {mail.recipients}</p>
-                  <p><strong>Fecha:</strong> {mail.date}</p>
-                  <p><strong>Asunto:</strong> {mail.subject}</p>
-                  <p><strong>Enviado por:</strong> {user.domain}</p>
-                  <p><strong>Firmado por:</strong> {user.signed_by}</p>
-                  <p><strong>Seguridad:</strong> {user.security}</p>
-                  <p className="important">⚠️ Por alguna razón, Google lo identificó como importante.</p>
+                  <p><b>De:</b> {user.name} &lt;{user.email}&gt;</p>
+                  <p><b>Responder-a:</b> {user.email}</p>
+                  <p><b>Para:</b> {mail.recipients}</p>
+                  <p><b>Fecha:</b> {mail.date}</p>
+                  <p><b>Enviado por:</b> {user.domain}</p>
+                  <p><b>Firmado por:</b> {user.signedBy}</p>
+                  <p><b>Seguridad:</b> {user.security}</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
+        {/* -------- bloque evento (opcional) -------- */}
         {event && (
           <div className={`calendar-event ${event.status}`}>
             <div className="calendar-date">
               <span className="day">{new Date(event.start).getDate()}</span>
-              <span className="month">{new Date(event.start).toLocaleString('default', { month: 'short' })}</span>
-              <span className="week">{new Date(event.start).toLocaleDateString('es-AR', { weekday: 'short' })}</span>
+              <span className="month">{new Date(event.start).toLocaleString('es-AR',{month:'short'})}</span>
+              <span className="week">{new Date(event.start).toLocaleDateString('es-AR',{weekday:'short'})}</span>
             </div>
             <div className="calendar-info">
               <div className="title">{event.title}</div>
-              <div className="source">De Calendario de Odoo</div>
-              {event.status === 'cancelled' && (
-                <div className="status"><b>Se canceló</b> este evento.</div>
-              )}
-              {event.location && (
-                <div className="location"><FaMapMarkerAlt /> {event.location}</div>
-              )}
+              {event.status==='cancelled' && <div className="status"><b>Se canceló</b> este evento.</div>}
+              {event.location && <div className="location"><FaMapMarkerAlt/> {event.location}</div>}
               {event.videocall_url && (
                 <a className="join-button" href={event.videocall_url} target="_blank" rel="noopener noreferrer">
-                  <FaVideo /> Unirse a la videollamada
+                  <FaVideo/> Unirse a la videollamada
                 </a>
               )}
             </div>
           </div>
         )}
 
-        <div
-          className="email-body"
-          dangerouslySetInnerHTML={{ __html: mail.body }}
-        />
-      </div>
+        {/* -------- cuerpo html -------- */}
+        <div className="email-body" dangerouslySetInnerHTML={{__html:mail.body}}/>
 
-      {mail.attachments && mail.attachments.length > 0 && (
-        <div className="email-attachments">
-          <h4>Archivos adjuntos</h4>
-          <div className="attachments-list">
-            {mail.attachments.map((att, idx) => (
-              <a
-                key={idx}
-                href={att.url}
-                download={att.name}
-                className="attachment-item"
-              >
-                <div className="attachment-icon">📎</div>
-                <div className="attachment-info">
-                  <span className="attachment-name">{att.name}</span>
-                  <span className="attachment-size">{att.size}</span>
-                </div>
-              </a>
-            ))}
+        {/* -------- adjuntos -------- */}
+        {Array.isArray(mail.attachments) && mail.attachments.length>0 && (
+          <div className="email-attachments">
+            <h4>Archivos adjuntos</h4>
+            <div className="attachments-list">
+              {mail.attachments.map((att,i)=>(
+                <a
+                  key={i}
+                  href={att.preview}                /* inline para ver / navegador decide */
+                  download={att.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="attachment-item"
+                >
+                  <div className="attachment-icon">{iconByMime(att.mimetype)}</div>
+                  <div className="attachment-info">
+                    <span className="attachment-name">{att.name}</span>
+                    <span className="attachment-size">{fmtSize(att.size)}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

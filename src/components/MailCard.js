@@ -1,252 +1,181 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope, FaUndoAlt, FaExclamationCircle } from 'react-icons/fa';
+/*  src/components/MailCard.js  */
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  AiFillFilePdf,
-  AiFillFileImage,
-  AiFillFileWord,
-  AiFillFileExcel,
-  AiFillFile
+  FaRegStar, FaStar, FaTrash, FaArchive, FaEnvelope,
+  FaUndoAlt, FaExclamationCircle
+} from 'react-icons/fa';
+import {
+  AiFillFilePdf, AiFillFileImage, AiFillFileWord,
+  AiFillFileExcel, AiFillFilePpt, AiFillFileZip, AiFillFile
 } from 'react-icons/ai';
-import api from '../services/api';
+import api          from '../services/api';
 import { useToast } from '../contexts/ToastContext';
 
-const MailCard = ({
+export default function MailCard({
   mail = {},
   selected = false,
   onToggle = () => {},
-  isSent = false,
   onMarkRead = () => {},
   onToggleFavorite = () => {},
   onDeleteMail = () => {},
-}) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+}) {
+  const nav  = useNavigate();
+  const loc  = useLocation();
   const { showToast, showConfirmToast } = useToast();
 
-  const getCurrentFolder = () => {
-    const path = location.pathname;
-    if (path.includes('/sent')) return 'sent';
-    if (path.includes('/starred')) return 'starred';
-    if (path.includes('/spam')) return 'spam';
-    if (path.includes('/trash')) return 'trash';
-    return 'inbox';
+  /* -------- carpeta actual -------- */
+  const path = loc.pathname;
+  const currentFolder =
+    path.includes('/sent')   ? 'sent'   :
+    path.includes('/trash')  ? 'trash'  :
+    path.includes('/spam')   ? 'spam'   :
+    path.includes('/starred')? 'starred': 'inbox';
+
+  /* -------- fecha -------- */
+  const isToday = d => {
+    const t = new Date(), x = new Date(d);
+    return x.getDate()===t.getDate() && x.getMonth()===t.getMonth() && x.getFullYear()===t.getFullYear();
   };
+  const fmtDate = d =>
+    isToday(d)
+      ? new Date(d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+      : new Date(d).toLocaleDateString('es-AR',{day:'2-digit',month:'short'});
 
-  const currentFolder = getCurrentFolder();
+  /* -------- icono por extensión -------- */
+  function attIcon(name=''){
+    const ext = name.split('.').pop().toLowerCase();
+    if (ext==='pdf')                             return <AiFillFilePdf  className="file-icon"/>;
+    if (['jpg','jpeg','png','gif','bmp','webp'].includes(ext))
+                                                 return <AiFillFileImage className="file-icon"/>;
+    if (['doc','docx','odt'].includes(ext))      return <AiFillFileWord className="file-icon"/>;
+    if (['xls','xlsx','csv','ods'].includes(ext))return <AiFillFileExcel className="file-icon"/>;
+    if (['ppt','pptx','odp'].includes(ext))      return <AiFillFilePpt  className="file-icon"/>;
+    if (['zip','rar','7z','tar','gz'].includes(ext))
+                                                 return <AiFillFileZip  className="file-icon"/>;
+    return <AiFillFile className="file-icon"/>;
+  }
 
-  const isToday = (dateStr) => {
-    if (!dateStr) return false;
-    const date = new Date(dateStr);
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  /* -------- navegación al abrir -------- */
+  function openMail(e){
+    const interactive = e.target.closest('input, button, .attachment-pill, .hover-actions');
+    if (interactive || !mail.id) return;
+    if (!mail.is_read) onMarkRead(mail.id);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return isToday(dateStr)
-      ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : date.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
-  };
+    const dest =
+      currentFolder==='sent'  ? `/sent/email/${mail.id}`  :
+      currentFolder==='trash' ? `/trash/email/${mail.id}` :
+      currentFolder==='spam'  ? `/spam/email/${mail.id}`  : `/email/${mail.id}`;
 
-  const handleToggleFavorite = (e) => {
+    nav(dest, { state:{ from:currentFolder } });
+  }
+
+  /* -------- acciones -------- */
+  const toggleFav   = e => { e.stopPropagation(); onToggleFavorite(mail.id, !mail.favorite); };
+  const toggleRead  = e => { e.stopPropagation(); onMarkRead(mail.id, !mail.is_read); };
+
+  async function delMail(e){
     e.stopPropagation();
-    onToggleFavorite(mail.id, !mail.favorite);
-  };
-
-  const handleClick = (e) => {
-    const isInteractive = e.target.closest('input, button, .attachment-pill, .hover-actions');
-    if (!isInteractive && mail.id) {
-      if (!mail.is_read) onMarkRead(mail.id);
-
-      const rutaDestino =
-        currentFolder === 'sent'
-          ? `/sent/email/${mail.id}`
-          : currentFolder === 'trash'
-          ? `/trash/email/${mail.id}`
-          : `/email/${mail.id}`;
-
-      navigate(rutaDestino, { state: { from: currentFolder } });
-    }
-  };
-
-  const handleMarkReadClick = (e) => {
-    e.stopPropagation();
-    onMarkRead(mail.id, !mail.is_read);
-  };
-
-  const handleDelete = async (e) => {
-    e.stopPropagation();
-
-    if (currentFolder === 'trash') {
+    if (currentFolder==='trash'){
       return showConfirmToast({
-        message: '¿Eliminar definitivamente este correo?',
-        type: 'warning',
-        confirmText: 'Eliminar',
-        cancelText: 'Cancelar',
-        onConfirm: async () => {
-          try {
-            const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
-            if (res?.success) {
-              onDeleteMail(mail.id);
-            }
-          } catch (err) {
-            console.error('❌ Error al eliminar correo:', err);
-            showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
-          }
+        message:'¿Eliminar definitivamente este correo?',
+        type:'warning',
+        confirmText:'Eliminar',
+        onConfirm: async ()=>{
+          await api.deleteMails({ folder:'trash', mail_ids:[mail.id] });
+          onDeleteMail(mail.id);
+          showToast({message:'🗑️ Eliminado', type:'warning'});
         }
       });
     }
+    await api.deleteMails({ folder: currentFolder==='starred'?'inbox':currentFolder, mail_ids:[mail.id] });
+    onDeleteMail(mail.id);
+    showToast({message:'🗑️ Correo a papelera', type:'warning'});
+  }
 
-    try {
-      const res = await api.deleteMails({ folder: currentFolder, mail_ids: [mail.id] });
-      if (res?.success) {
-        onDeleteMail(mail.id);
-        showToast({ message: '🗑️ Correo movido a la papelera', type: 'warning' });
-      }
-    } catch (err) {
-      console.error('❌ Error al mover a papelera:', err);
-      showToast({ message: '❌ No se pudo eliminar el correo', type: 'error' });
-    }
-  };
-
-  const handleMarkAsSpam = async (e) => {
+  async function spam(e){
     e.stopPropagation();
-    try {
-      await api.marcarComoSpam([mail.id]);
-      onDeleteMail(mail.id);
-      showToast({ message: '🚫 Correo marcado como spam', type: 'warning' });
-    } catch (err) {
-      showToast({ message: '❌ No se pudo mover a spam', type: 'error' });
-    }
-  };
-
-  const handleUnmarkSpam = async (e) => {
+    await api.marcarComoSpam([mail.id]);
+    onDeleteMail(mail.id);
+    showToast({message:'🚫 Movido a Spam', type:'warning'});
+  }
+  async function noSpam(e){
     e.stopPropagation();
     showConfirmToast({
-      message: '¿Sacar este correo de la carpeta Spam?',
-      type: 'warning',
-      confirmText: 'Sí, sacar',
-      cancelText: 'Cancelar',
-      onConfirm: async () => {
-        try {
-          await api.marcarComoNoSpam([mail.id]);
-          onDeleteMail(mail.id);
-          showToast({ message: '📥 Correo movido a Recibidos', type: 'success' });
-        } catch (err) {
-          showToast({ message: '❌ No se pudo sacar de spam', type: 'error' });
-        }
+      message:'¿Sacar de Spam?',
+      type:'warning',
+      confirmText:'Mover',
+      onConfirm: async()=>{
+        await api.marcarComoNoSpam([mail.id]);
+        onDeleteMail(mail.id);
+        showToast({message:'📥 Recuperado', type:'success'});
       }
     });
-  };
-
-  const handleRestore = async (e) => {
+  }
+  async function restore(e){
     e.stopPropagation();
-    try {
-      await api.restoreMails([mail.id]);
-      onDeleteMail(mail.id);
-      showToast({ message: '♻️ Correo restaurado', type: 'success' });
-    } catch (err) {
-      showToast({ message: '❌ No se pudo restaurar', type: 'error' });
-    }
-  };
+    await api.restoreMails([mail.id]);
+    onDeleteMail(mail.id);
+    showToast({message:'♻️ Restaurado', type:'success'});
+  }
 
-  const getAttachmentIcon = (name) => {
-    if (typeof name !== 'string') return <AiFillFile className="file-icon" />;
-    const ext = name.split('.').pop().toLowerCase();
-    if (ext === 'pdf') return <AiFillFilePdf className="file-icon" />;
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) return <AiFillFileImage className="file-icon" />;
-    if (['doc', 'docx'].includes(ext)) return <AiFillFileWord className="file-icon" />;
-    if (['xls', 'xlsx', 'csv'].includes(ext)) return <AiFillFileExcel className="file-icon" />;
-    return <AiFillFile className="file-icon" />;
-  };
-
+  /* -------- render -------- */
   return (
-    <div className={`mail-card ${mail.state || ''}`} onClick={handleClick}>
+    <div className={`mail-card ${mail.state||''}`} onClick={openMail}>
+      {/* fila principal */}
       <div className="mail-row">
-        <input type="checkbox" checked={selected} onChange={onToggle} />
-        <button
-          className="starBtn"
-          title={mail.favorite ? 'Quitar de destacados' : 'Marcar como destacado'}
-          onClick={handleToggleFavorite}
-        >
-          {mail.favorite ? <FaStar /> : <FaRegStar />}
+        <input type="checkbox" checked={selected} onChange={onToggle}/>
+        <button className="starBtn" title={mail.favorite?'Quitar destacado':'Destacar'} onClick={toggleFav}>
+          {mail.favorite ? <FaStar/> : <FaRegStar/>}
         </button>
 
         <div className="mail-info">
           <strong className="mail-sender">{mail.de || 'Remitente desconocido'}</strong>
-          <span className="mail-subject">{mail.asunto || '(Sin asunto)'}</span>
-          <span
-            className="mail-snippet"
-            dangerouslySetInnerHTML={{
-              __html: typeof mail.contenido === 'string' ? mail.contenido.slice(0, 80) : ''
-            }}
-          />
+          <span   className="mail-subject">{mail.asunto || '(Sin asunto)'}</span>
+          <span   className="mail-snippet" dangerouslySetInnerHTML={{
+            __html:(mail.contenido||'').slice(0,80)
+          }}/>
         </div>
 
-        <span className="mail-date">{formatDate(mail.fecha)}</span>
+        <span className="mail-date">{fmtDate(mail.fecha)}</span>
 
+        {/* acciones hover */}
         <div className="hover-actions">
-          <button title="Eliminar" onClick={handleDelete}>
-            <FaTrash />
-          </button>
-          {currentFolder === 'trash' && (
-            <button title="Restaurar" onClick={handleRestore}>
-              <FaUndoAlt />
-            </button>
-          )}
-          {currentFolder !== 'spam' ? (
-            <button title="Marcar como spam" onClick={handleMarkAsSpam}>
-              <FaExclamationCircle />
-            </button>
+          <button title="Eliminar"          onClick={delMail}><FaTrash/></button>
+          {currentFolder==='trash' ? (
+            <button title="Restaurar"       onClick={restore}><FaUndoAlt/></button>
+          ) : currentFolder!=='spam' ? (
+            <button title="Marcar como spam"onClick={spam}><FaExclamationCircle/></button>
           ) : (
-            <button title="Sacar de Spam" onClick={handleUnmarkSpam}>
-              <FaUndoAlt />
-            </button>
+            <button title="Sacar de spam"   onClick={noSpam}><FaUndoAlt/></button>
           )}
-          <button title="Archivar">
-            <FaArchive />
-          </button>
+          <button title="Archivar"><FaArchive/></button>
           <button
-            title={mail.is_read ? 'Marcar como no leído' : 'Marcar como leído'}
+            title={mail.is_read?'Marcar como no leído':'Marcar como leído'}
             className="unread-icon"
-            onClick={handleMarkReadClick}
+            onClick={toggleRead}
           >
-            <FaEnvelope />
-            {mail.is_read && <span className="dot" />}
+            <FaEnvelope/>{mail.is_read && <span className="dot"/>}
           </button>
         </div>
       </div>
 
-      {Array.isArray(mail.adjuntos) && mail.adjuntos.length > 0 && (
+      {/* adjuntos */}
+      {Array.isArray(mail.adjuntos) && mail.adjuntos.length>0 && (
         <div className="mail-attachment-row">
-          {mail.adjuntos.slice(0, 4).map((att, idx) => (
-            <a
-              key={idx}
-              href={att?.url || '#'}
-              className="attachment-pill"
-              target="_blank"
-              rel="noopener noreferrer"
-              title={att?.nombre || 'Archivo'}
-            >
-              {getAttachmentIcon(att?.nombre)}
-              <span className="filename">{att?.nombre || 'Archivo'}</span>
-            </a>
+          {mail.adjuntos.slice(0,4).map((att,idx)=>(
+            <div key={idx} className="attachment-pill" title={att.nombre} onClick={e=>e.stopPropagation()}>
+              {attIcon(att.nombre)}
+              <span className="filename">{att.nombre}</span>
+              <a className="att-btn" href={att.preview} target="_blank" rel="noopener noreferrer">Ver</a>
+              <a className="att-btn" href={att.url} download={att.nombre}>⬇︎</a>
+            </div>
           ))}
-          {mail.adjuntos.length > 4 && (
-            <span className="more-attachments">
-              +{mail.adjuntos.length - 4} más
-            </span>
+          {mail.adjuntos.length>4 && (
+            <span className="more-attachments">+{mail.adjuntos.length-4} más</span>
           )}
         </div>
       )}
     </div>
   );
-};
-
-export default MailCard;
+}

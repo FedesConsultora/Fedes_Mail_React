@@ -8,7 +8,7 @@ export default function EmailToolbar({
   mailId,
   isRead,
   onArchive,
-  onMarkUnread,
+  onToggleRead,
   onRestore
 }) {
   const navigate = useNavigate();
@@ -53,10 +53,10 @@ export default function EmailToolbar({
         </button>
       )}
 
-      {!isTrash && onMarkUnread && (
+      {!isTrash && onToggleRead && (
         <button
           className="toolbarIcon"
-          onClick={onMarkUnread}
+          onClick={onToggleRead}
           title={isRead ? 'Marcar como no leído' : 'Marcar como leído'}
         >
           <span className="icon-unread">
