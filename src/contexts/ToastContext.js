@@ -1,5 +1,5 @@
 // src/contexts/ToastContext.js
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import Toast from '../components/Toast';
 
 const ToastContext = createContext();
@@ -10,13 +10,13 @@ export function useToast() {
 
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([]);
-
-    const showToast = ({ message, type = 'success', duration = 3000 }) => {
+    
+    const showToast = useCallback(({ message, type = 'success', duration = 3000 }) => {
         const id = Date.now();
-        console.log('📢 Mostrando toast:', { message, type });
         setToasts((prev) => [...prev, { id, message, type, duration }]);
-    };
-    const showConfirmToast = ({ message, onConfirm, onCancel, confirmText = "Sí", cancelText = "No", type = "warning" }) => {
+    }, []);
+
+    const showConfirmToast = useCallback(({ message, onConfirm, onCancel, confirmText = "Sí", cancelText = "No", type = "warning" }) => {
         const id = Date.now();
         const toast = {
             id,
@@ -34,9 +34,8 @@ export function ToastProvider({ children }) {
                 onCancel?.();
             }
         };
-        
         setToasts((prev) => [...prev, toast]);
-    };
+    }, []);
 
     const removeToast = (id) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));

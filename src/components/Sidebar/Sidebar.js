@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   FaInbox,
@@ -11,12 +11,14 @@ import {
 import ComposeButton from '../ComposeButton';
 import ComposeModal from '../ComposeModal';
 
-export default function Sidebar({ isCollapsed }) {
+function Sidebar({ isCollapsed }) {
   const [showCompose, setShowCompose] = useState(false);
 
-  const logoURL = isCollapsed
-    ? 'https://fedesagency.com/fedes-consultora/landing/IsologoBlanco.png'
-    : 'https://fedesagency.com/fedes-consultora/landing/logoBlanco.png';
+  const logoURL = useMemo(() => (
+    isCollapsed
+      ? 'https://fedesagency.com/fedes-consultora/landing/IsologoBlanco.png'
+      : 'https://fedesagency.com/fedes-consultora/landing/logoBlanco.png'
+  ), [isCollapsed]);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -64,3 +66,5 @@ export default function Sidebar({ isCollapsed }) {
     </aside>
   );
 }
+
+export default React.memo(Sidebar);

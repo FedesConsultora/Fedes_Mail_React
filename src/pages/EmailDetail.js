@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt,
-  FaPaperclip,   FaFileAlt,    FaInbox
+  FaPaperclip, FaFileAlt, FaInbox
 } from 'react-icons/fa';
 import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import EmailToolbar     from '../components/EmailToolbar';
@@ -15,33 +15,31 @@ const fmtSize    = s => (typeof s === 'string' ? s : `${(s / 1024).toFixed(0)} K
 const iconByMime = m => (m?.startsWith('image/') ? <FaPaperclip /> : <FaFileAlt />);
 
 /* ───── parser ICS mínimo ───── */
-async function fetchAndParseICS(url) {
+async function fetchAndParseICS (url) {
   const txt = await fetch(url).then(r => r.text());
-
-  const g  = k => (txt.match(new RegExp(`${k}:(.+)`)) || [,''])[1].trim();
-  const dt = v => {                /* YYYYMMDDThhmmss(Z) -> ISO */
+  const g   = k => (txt.match(new RegExp(`${k}:(.+)`)) || [,''])[1].trim();
+  const dt  = v => {
     const m = v.replace('Z','').match(/(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})?/);
     if (!m) return null;
     const [ ,Y,M,D,h,mi,s='00'] = m;
     return `${Y}-${M}-${D}T${h}:${mi}:${s}`;
   };
-
   return {
-    title  : g('SUMMARY')   || '(Sin título)',
-    location: g('LOCATION') || '',
-    url    : g('URL')       || '',
-    start  : dt(g('DTSTART')),
-    end    : dt(g('DTEND')),
-    status : /STATUS:CANCELLED/.test(txt) ? 'cancelled' : ''
+    title   : g('SUMMARY')   || '(Sin título)',
+    location: g('LOCATION')  || '',
+    url     : g('URL')       || '',
+    start   : dt(g('DTSTART')),
+    end     : dt(g('DTEND')),
+    status  : /STATUS:CANCELLED/.test(txt) ? 'cancelled' : ''
   };
 }
 
 /* ─────────────────────────── */
-export default function EmailDetail() {
-  const { id }       = useParams();
-  const location     = useLocation();
-  const navigate     = useNavigate();
-  const { showToast }= useToast();
+export default function EmailDetail () {
+  const { id }        = useParams();
+  const location      = useLocation();
+  const navigate      = useNavigate();
+  const { showToast , showConfirmToast } = useToast();
 
   /* carpeta de origen (para volver) */
   const fromFolder = location.state?.from || (
@@ -66,14 +64,14 @@ export default function EmailDetail() {
       ? api.obtenerDetalleCorreoEnviado
       : isTrash
         ? api.obtenerDetalleCorreoEliminado
-        : api.obtenerDetalleCorreo;          // spam usa el mismo que inbox
+        : api.obtenerDetalleCorreo;   // spam e inbox usan el mismo
 
     fn(+id)
       .then(setMail)
-      .catch(() => showToast({ message: '❌ No se pudo cargar el correo', type: 'error' }));
+      .catch(() => showToast({ message:'❌ No se pudo cargar el correo', type:'error' }));
   }, [id, isSent, isTrash, showToast]);
 
-  /* ----- normalizar remitente y leer ICS ----- */
+  /* ----- remitente + ICS ----- */
   useEffect(() => {
     if (!mail) return;
 
@@ -97,37 +95,46 @@ export default function EmailDetail() {
     })();
   }, [mail]);
 
-  /* ----- acciones toolbar ----- */
+  /* ---------- acciones ---------- */
   const toggleRead = async nuevo => {
     try {
-      await api.setState({ folder: fromFolder, mail_ids: [mail.id], state: { is_read: nuevo } });
-      setMail(m => ({ ...m, is_read: nuevo, state: nuevo ? 'read' : 'unread' }));
+      await api.setState({ folder: fromFolder, mail_ids:[mail.id], state:{ is_read:nuevo } });
+      setMail(m => ({ ...m, is_read:nuevo, state:nuevo ? 'read' : 'unread' }));
     } catch {
-      showToast({ message: '❌ No se pudo actualizar', type: 'error' });
+      showToast({ message:'❌ No se pudo actualizar', type:'error' });
     }
   };
 
   const restoreFromTrash = async () => {
     try {
       await api.restoreMails([mail.id]);
-      showToast({ message: '♻️ Correo restaurado', type: 'success' });
+      showToast({ message:'♻️ Correo restaurado', type:'success' });
       navigate('/');
     } catch {
-      showToast({ message: '❌ No se pudo restaurar', type: 'error' });
+      showToast({ message:'❌ No se pudo restaurar', type:'error' });
     }
   };
 
-  const removeFromSpam = async () => {
-    try {
-      await api.marcarComoNoSpam([Number(mail.id)]);
-      showToast({ message: '📥 Correo movido a Recibidos', type: 'success' });
-      navigate('/');
-    } catch {
-      showToast({ message: '❌ No se pudo mover', type: 'error' });
-    }
+  const removeFromSpam = () => {
+    if (!mail?.id) return;
+    showConfirmToast({
+      message    : '¿Mover este correo a Recibidos?',
+      type       : 'warning',
+      confirmText: 'Mover',
+      cancelText : 'Cancelar',
+      onConfirm  : async () => {
+        try {
+          await api.marcarComoNoSpam([mail.id]);
+          showToast({ message:'📥 Correo movido a Recibidos', type:'success' });
+          navigate('/');
+        } catch {
+          showToast({ message:'❌ No se pudo mover', type:'error' });
+        }
+      }
+    });
   };
 
-  /* ----- loading ----- */
+  /* ---------- loading ---------- */
   if (!mail) {
     return (
       <div className="inboxContainer">
@@ -136,18 +143,18 @@ export default function EmailDetail() {
     );
   }
 
-  /* ----- render ----- */
+  /* ---------- render ---------- */
   return (
     <div className="inboxContainer">
       <SearchAndFilters />
 
       <EmailToolbar
-        mailId={mail.id}
-        isRead={mail.is_read}
+        mailId      ={mail.id}
+        isRead      ={mail.is_read}
         onArchive   ={(!isTrash && !isSpam) ? () => alert('Archivar') : undefined}
-        onToggleRead={(!isTrash && !isSpam) ? toggleRead           : undefined}
+        onToggleRead={!isTrash && !isSpam   ? toggleRead            : undefined}
         onRestore   ={isTrash ? restoreFromTrash
-                    : isSpam  ? removeFromSpam  : undefined}
+                    : isSpam  ? removeFromSpam   : undefined}
         restoreIcon ={isSpam ? <FaInbox/> : undefined}
         restoreTitle={isSpam ? 'Mover a Recibidos' : 'Restaurar correo'}
       />
@@ -155,7 +162,7 @@ export default function EmailDetail() {
       <div className="email-detail">
         <h2 className="subject">{mail.subject}</h2>
 
-        {/* remitente ----------------------------------------------------- */}
+        {/* -------- remitente -------- */}
         {user && (
           <div className="sender-row">
             <img src={user.avatar} alt="" className="profile-pic" />
@@ -168,7 +175,7 @@ export default function EmailDetail() {
                   className="toggle-details"
                   onClick={() => setDetailsOpen(o => !o)}
                 >
-                  {detailsOpen ? <FaChevronUp /> : <FaChevronDown />}
+                  {detailsOpen ? <FaChevronUp/> : <FaChevronDown/>}
                 </button>
               </div>
 
@@ -187,16 +194,16 @@ export default function EmailDetail() {
           </div>
         )}
 
-        {/* evento calendario --------------------------------------------- */}
+        {/* -------- evento calendario -------- */}
         {event && (
           <div className={`calendar-event ${event.status}`}>
             <div className="calendar-date">
               <span className="day">{new Date(event.start).getDate()}</span>
               <span className="month">
-                {new Date(event.start).toLocaleString('es-AR', { month: 'short' })}
+                {new Date(event.start).toLocaleString('es-AR', { month:'short' })}
               </span>
               <span className="week">
-                {new Date(event.start).toLocaleDateString('es-AR', { weekday: 'short' })}
+                {new Date(event.start).toLocaleDateString('es-AR', { weekday:'short' })}
               </span>
             </div>
 
@@ -206,7 +213,7 @@ export default function EmailDetail() {
                 <div className="status"><b>Se canceló</b> este evento.</div>
               )}
               {event.location && (
-                <div className="location"><FaMapMarkerAlt /> {event.location}</div>
+                <div className="location"><FaMapMarkerAlt/> {event.location}</div>
               )}
               {event.url && (
                 <a
@@ -215,20 +222,20 @@ export default function EmailDetail() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <FaVideo /> Unirse a la videollamada
+                  <FaVideo/> Unirse a la videollamada
                 </a>
               )}
             </div>
           </div>
         )}
 
-        {/* cuerpo --------------------------------------------------------- */}
+        {/* -------- cuerpo -------- */}
         <div
           className="email-body"
           dangerouslySetInnerHTML={{ __html: mail.body }}
         />
 
-        {/* adjuntos ------------------------------------------------------- */}
+        {/* -------- adjuntos -------- */}
         {Array.isArray(mail.attachments) && mail.attachments.length > 0 && (
           <div className="email-attachments">
             <h4>Archivos adjuntos</h4>

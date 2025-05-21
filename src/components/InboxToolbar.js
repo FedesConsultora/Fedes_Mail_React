@@ -8,10 +8,12 @@ import {
   FaEnvelope,
   FaChevronLeft,
   FaChevronRight,
-  FaUndoAlt
+  FaUndoAlt,
+  FaInbox
 } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
+import api from '../services/api';
 
 export default function InboxToolbar({
   allSelected,
@@ -31,7 +33,7 @@ export default function InboxToolbar({
   const [showMenu, setShowMenu] = useState(false);
   const checkboxRef = useRef(null);
   const location = useLocation();
-  const { showToast } = useToast();
+  const { showToast, showConfirmToast } = useToast();
   // Carpeta actual detectada por pathname
   const getFolderFromPath = (pathname) => {
     if (pathname.includes('/sent')) return 'sent';
@@ -55,13 +57,21 @@ export default function InboxToolbar({
 
   const moveSelectionOutOfSpam = async () => {
     if (selected.length === 0) return;
-    try {
-      await api.marcarComoNoSpam(selected);       // <- ya filtrado en api.js
-      showToast({ message: `📥 ${selected.length} correo(s) movidos a Recibidos`, type: 'success' });
-      onReload?.();                               // refrescamos lista
-    } catch {
-      showToast({ message: '❌ No se pudo mover', type: 'error' });
-    }
+    showConfirmToast({
+      message    : `¿Sacar ${selected.length} correo(s) de Spam?`,
+      type       : 'warning',
+      confirmText: 'Mover',
+      cancelText : 'Cancelar',
+      onConfirm  : async () => {
+        try {
+          await api.marcarComoNoSpam(selected);
+          showToast({ message:`📥 ${selected.length} correo(s) movidos a Recibidos`, type:'success' });
+          onReload?.();
+        } catch {
+          showToast({ message:'❌ No se pudo mover', type:'error' });
+        }
+      }
+    });
   };
 
   return (

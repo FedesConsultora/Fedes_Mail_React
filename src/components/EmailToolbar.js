@@ -89,7 +89,19 @@ export default function EmailToolbar({
       {onRestore && (
         <button
           className="toolbarIcon"
-          onClick={onRestore}
+          onClick={() => {
+            if (isSpam) {
+              showConfirmToast({
+                message: '¿Mover este correo a Recibidos?',
+                type: 'warning',
+                confirmText: 'Mover',
+                cancelText: 'Cancelar',
+                onConfirm: onRestore
+              });
+            } else {
+              onRestore();
+            }
+          }}
           title={restoreTitle}
         >
           {restoreIcon}

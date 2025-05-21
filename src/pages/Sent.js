@@ -1,5 +1,5 @@
 /*  src/pages/Sent.jsx  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import MailCard from '../components/MailCard';
 import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
@@ -8,83 +8,50 @@ import { useToast } from '../contexts/ToastContext';
 import { useLocation } from 'react-router-dom';
 
 export default function Sent() {
-  const { user, loading } = useUser();
+  const { user } = useUser();
+  const { showToast } = useToast();
+  const location = useLocation();
+
   const [mails, setMails] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const mailsPerPage = 50;
   const [totalMails, setTotalMails] = useState(0);
-  const { showToast } = useToast();
+  const mailsPerPage = 50;
 
-  const location = useLocation();
-  const currentFolder = location.pathname.includes('/trash')
-    ? 'trash'
-    : location.pathname.includes('/sent')
-    ? 'sent'
-    : 'inbox';
+  const currentFolder = useMemo(() => {
+    if (location.pathname.includes('/trash')) return 'trash';
+    if (location.pathname.includes('/sent')) return 'sent';
+    return 'inbox';
+  }, [location.pathname]);
 
-  /* ————— MARCAR COMO FAVORITO ————— */
-  async function toggleFavorite(id, nuevoEstado) {
+  const totalPages = useMemo(() => Math.ceil(totalMails / mailsPerPage), [totalMails]);
+
+  const toggleFavorite = useCallback(async (id, nuevoEstado) => {
     try {
-      await api.setState({
-        folder: currentFolder,
-        mail_ids: [id],
-        state: { favorite: nuevoEstado }
-      });
-
-      setMails(curr =>
-        curr.map(m =>
-          m.id === id ? { ...m, favorite: nuevoEstado } : m
-        )
-      );
+      await api.setState({ folder: currentFolder, mail_ids: [id], state: { favorite: nuevoEstado } });
+      setMails(curr => curr.map(m => m.id === id ? { ...m, favorite: nuevoEstado } : m));
     } catch (err) {
       console.error('❌ Error al actualizar favorito:', err);
       showToast({ message: '❌ Error al actualizar favorito.', type: 'error' });
     }
-  }
-  
-  /* --- MARCAR LEÍDO / NO LEÍDO --- */
-  async function marcarComoLeidoIndividual(id, is_read = true) {
-    try {
-      await api.setState({
-        folder: 'sent',
-        mail_ids: [id],
-        state: { is_read }
-      });
+  }, [currentFolder, showToast]);
 
-      setMails((curr) =>
-        curr.map((m) =>
-          m.id === id ? { ...m, is_read, state: is_read ? 'read' : 'unread' } : m
-        )
-      );
+  const marcarComoLeidoIndividual = useCallback(async (id, is_read = true) => {
+    try {
+      await api.setState({ folder: 'sent', mail_ids: [id], state: { is_read } });
+      setMails(curr => curr.map(m => m.id === id ? { ...m, is_read, state: is_read ? 'read' : 'unread' } : m));
     } catch (err) {
       console.error('❌ Error al cambiar lectura:', err);
     }
-  }
-  /* --- carga de enviados --- */
-  useEffect(() => {
-    if (!loading && user && typeof user.email === 'string') {
-      api
-        .obtenerEnviados(currentPage, mailsPerPage)
-        .then(({ emails, total }) => {
-          setMails(emails);
-          setTotalMails(total);
-          setSelectedIds([]);
-        })
-        .catch((err) => {
-          console.error('❌ Error al cargar enviados:', err);
-          showToast({ message: '❌ Error al cargar enviados:', type: 'error' });
-        });
-    }
-  }, [loading, user, currentPage, showToast]);
+  }, []);
 
-  // Elimina del estado local
-  function eliminarCorreoLocal(id) {
-    setMails((curr) => curr.filter((m) => m.id !== id));
-    setSelectedIds((prev) => prev.filter((i) => i !== id));
-    setTotalMails((prev) => Math.max(prev - 1, 0));
-  }
-  async function eliminarSeleccionados() {
+  const eliminarCorreoLocal = useCallback((id) => {
+    setMails(curr => curr.filter(m => m.id !== id));
+    setSelectedIds(prev => prev.filter(i => i !== id));
+    setTotalMails(prev => Math.max(prev - 1, 0));
+  }, []);
+
+  const eliminarSeleccionados = useCallback(() => {
     if (!selectedIds.length) return;
 
     showToast({
@@ -109,32 +76,44 @@ export default function Sent() {
         }
       }
     });
-  }
+  }, [selectedIds, showToast]);
 
-  /* --- helpers selección --- */
-  const totalPages = Math.ceil(totalMails / mailsPerPage);
-
-  const toggleSelectAll = () =>
-    setSelectedIds(
-      selectedIds.length === mails.length
+  const toggleSelectAll = () => {
+    setSelectedIds(prev =>
+      prev.length === mails.length
         ? []
-        : mails.map((m) => m.id).filter(Boolean)
+        : mails.map(m => m?.id).filter(Boolean)
     );
+  };
 
-  const toggleSelectOne = (id) =>
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  const toggleSelectOne = (id) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
+  };
 
-  /* --- render --- */
-  if (loading) return <div>Cargando usuario…</div>;
+  useEffect(() => {
+    if (!user || typeof user.email !== 'string') return;
+
+    api
+      .obtenerEnviados(currentPage, mailsPerPage)
+      .then(({ emails = [], total = 0 }) => {
+        setMails(emails);
+        setTotalMails(total);
+        setSelectedIds([]);
+      })
+      .catch((err) => {
+        console.error('❌ Error al cargar enviados:', err);
+        showToast({ message: '❌ Error al cargar enviados:', type: 'error' });
+      });
+  }, [user, currentPage, showToast]);
 
   return (
     <MailboxLayout
       allSelected={selectedIds.length === mails.length && mails.length > 0}
       someSelected={selectedIds.length > 0 && selectedIds.length < mails.length}
       onSelectAll={toggleSelectAll}
-      onMarkAllRead={() => {}}
+      onMarkAllRead={() => {}} // Podés implementar si querés bulk read
       onDeleteMultiple={eliminarSeleccionados}
       selected={selectedIds}
       currentPage={currentPage}
@@ -142,21 +121,20 @@ export default function Sent() {
       onPrevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}
       onNextPage={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
     >
-      {mails.length > 0 ? (
-        mails.map(
-          (mail) =>
-            mail?.id && (
-              <MailCard
-                key={mail.id}
-                mail={mail}
-                selected={selectedIds.includes(mail.id)}
-                onToggle={() => toggleSelectOne(mail.id)}
-                isSent={true}
-                onToggleFavorite={toggleFavorite}
-                onMarkRead={marcarComoLeidoIndividual}
-                onDeleteMail={eliminarCorreoLocal}
-              />
-            )
+      {Array.isArray(mails) && mails.length > 0 ? (
+        mails.map(mail =>
+          mail?.id && (
+            <MailCard
+              key={mail.id}
+              mail={mail}
+              selected={selectedIds.includes(mail.id)}
+              onToggle={() => toggleSelectOne(mail.id)}
+              isSent={true}
+              onToggleFavorite={toggleFavorite}
+              onMarkRead={marcarComoLeidoIndividual}
+              onDeleteMail={eliminarCorreoLocal}
+            />
+          )
         )
       ) : (
         <div className="no-mails">No hay correos enviados.</div>

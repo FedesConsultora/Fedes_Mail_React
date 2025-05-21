@@ -119,7 +119,7 @@ export default function Spam() {
   const isSomeSelected = selectedIds.length > 0 && !isAllSelected;
   const totalPages = Math.ceil(totalMails / mailsPerPage);
 
-  if (loadingUser) return null;     // evita parpadeo mientras carga el usuario
+  if (!user || loadingUser) return null;  
 
   return (
     <MailboxLayout

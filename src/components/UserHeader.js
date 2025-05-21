@@ -1,15 +1,10 @@
 import React from 'react';
 import { useUser } from '../contexts/UserContext';
 
-export default function UserHeader() {
+function UserHeader() {
   const { user } = useUser();
 
-  // Validación completa antes de acceder a propiedades
-  if (
-    !user ||
-    typeof user.nombre !== 'string' ||
-    typeof user.imagen_avatar !== 'string'
-  ) {
+  if (!user || typeof user.nombre !== 'string' || typeof user.imagen_avatar !== 'string') {
     return null;
   }
 
@@ -32,3 +27,5 @@ export default function UserHeader() {
     </div>
   );
 }
+
+export default React.memo(UserHeader);
