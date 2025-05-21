@@ -1,6 +1,4 @@
 // src/components/ReplyForwardButtons.jsx
-import React from 'react';
-import './ReplyForwardButtons.scss'; // Estilos aparte o integralo en email-detail.scss si preferís
 
 export default function ReplyForwardButtons({ onReply, onForward }) {
   return (

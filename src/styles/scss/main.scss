@@ -15,6 +15,10 @@
 @import 'loader';
 @import 'noMails';
 
+.openChatButton{
+  display: none !important;
+}
+
 .o-livechat-LivechatButton {
   display: none !important;
 }

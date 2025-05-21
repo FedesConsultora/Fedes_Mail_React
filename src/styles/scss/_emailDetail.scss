@@ -149,7 +149,6 @@
 /* —— adjuntos —— */
 .email-attachments {
   margin-top: 1.5rem;
-  padding-left: 2rem;
 
   h4 {
     font-size: 0.95rem;
@@ -205,7 +204,10 @@
       }
     }
   }
-  .reply-forward-actions {
+  
+
+}
+.reply-forward-actions {
   margin-top: 1.5rem;
   display: flex;
   gap: 1rem;
@@ -240,9 +242,6 @@
     }
   }
 }
-
-}
-
 /* —— animación fade in —— */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }

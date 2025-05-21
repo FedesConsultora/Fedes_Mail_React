@@ -9,6 +9,8 @@ import Picker  from '@emoji-mart/react';
 import data    from '@emoji-mart/data';
 import api     from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useEffect } from 'react';
+
 
 const MAX_MB = 25;
 const MAX_B  = MAX_MB * 1024 * 1024;
@@ -46,7 +48,15 @@ export default function ComposeModal({ onClose, initialData = {} }) {
     e.preventDefault();
     processFiles(Array.from(e.dataTransfer.files));
   };
-
+  useEffect(() => {
+    setForm({
+      to     : initialData.to      || '',
+      cc     : '',
+      cco    : '',
+      subject: initialData.subject || '',
+      body   : initialData.body    || ''
+    });
+  }, [initialData]);
   async function processFiles(list){
     const nuevos=[];
     for (const file of list){
