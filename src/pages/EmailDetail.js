@@ -9,6 +9,9 @@ import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
 import EmailToolbar     from '../components/EmailToolbar';
 import api              from '../services/api';
 import { useToast }     from '../contexts/ToastContext';
+import Loader from '../components/Loader';
+import ReplyForwardButtons from '../components/ReplyForwardButtons';
+import ComposeModal from '../components/ComposeModal';
 
 /* ───── helpers adjuntos ───── */
 const fmtSize    = s => (typeof s === 'string' ? s : `${(s / 1024).toFixed(0)} KB`);
@@ -57,6 +60,7 @@ export default function EmailDetail () {
   const [user , setUser ] = useState(null);
   const [event, setEvent] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [composeData, setComposeData] = useState(null);
 
   /* ----- fetch detalle ----- */
   useEffect(() => {
@@ -134,13 +138,27 @@ export default function EmailDetail () {
     });
   };
 
+  const handleReply = async () => {
+    const data = await api.prepareReply(mail.id);
+    setComposeData({
+      to: data.destinatario,
+      subject: data.asunto,
+      body: data.cuerpo_html
+    });
+  };
+
+  const handleForward = async () => {
+    const data = await api.prepareForward(mail.id);
+    setComposeData({
+      to: '',
+      subject: data.asunto,
+      body: data.cuerpo_html
+    });
+  };
+
   /* ---------- loading ---------- */
   if (!mail) {
-    return (
-      <div className="inboxContainer">
-        <p>Cargando correo…</p>
-      </div>
-    );
+    return <Loader message="Cargando correo…" />;
   }
 
   /* ---------- render ---------- */
@@ -259,7 +277,14 @@ export default function EmailDetail () {
             </div>
           </div>
         )}
+        <ReplyForwardButtons onReply={handleReply} onForward={handleForward} />
       </div>
+      {composeData && (
+        <ComposeModal
+          onClose={() => setComposeData(null)}
+          initialData={composeData}
+        />
+      )}
     </div>
   );
 }

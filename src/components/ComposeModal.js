@@ -15,9 +15,15 @@ const MAX_B  = MAX_MB * 1024 * 1024;
 
 /* ─────────────────────────────────────────────────────────── */
 
-export default function ComposeModal({ onClose }) {
+export default function ComposeModal({ onClose, initialData = {} }) {
   /* ────────────── formulario ────────────── */
-  const [form, setForm] = useState({ to:'', cc:'', cco:'', subject:'', body:'' });
+  const [form, setForm] = useState({
+    to     : initialData.to      || '',
+    cc     : '',
+    cco    : '',
+    subject: initialData.subject || '',
+    body   : initialData.body    || ''
+  });
   const [showCc,  setShowCc ] = useState(false);
   const [showCco, setShowCco] = useState(false);
 

@@ -205,6 +205,42 @@
       }
     }
   }
+  .reply-forward-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  padding-left: 2rem;
+
+  .action-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+
+  .reply {
+    background-color: #f0f4ff;
+    color: #1a73e8;
+
+    &:hover {
+      background-color: #e0ecff;
+    }
+  }
+
+  .forward {
+    background-color: #f9f9f9;
+    color: #444;
+
+    &:hover {
+      background-color: #efefef;
+    }
+  }
+}
+
 }
 
 /* —— animación fade in —— */

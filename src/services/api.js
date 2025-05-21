@@ -236,7 +236,26 @@ const api = {
 
     const { emails = [], total = 0 } = await ensure(res);
     return { emails, total };
-  }
+  },
+  async prepareReply(mailId) {
+    const res = await fetch(`${apiBase}/prepare_reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
+
+  async prepareForward(mailId) {
+    const res = await fetch(`${apiBase}/prepare_forward`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
 };
 
 export default api;
