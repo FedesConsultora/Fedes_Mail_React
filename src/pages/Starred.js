@@ -3,6 +3,7 @@ import MailCard from '../components/MailCard';
 import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
+import NoMails from '../components/NoMails';
 
 export default function Starred() {
   const { user } = useUser();
@@ -89,7 +90,7 @@ export default function Starred() {
           )
         )
       ) : (
-        <div className="no-mails">No hay correos destacados.</div>
+        <NoMails mensaje="No hay correos en Destacados." />
       )}
     </MailboxLayout>
   );

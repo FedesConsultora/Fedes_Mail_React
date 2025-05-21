@@ -6,6 +6,7 @@ import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
 import { useLocation } from 'react-router-dom';
+import NoMails from '../components/NoMails';
 
 export default function Sent() {
   const { user } = useUser();
@@ -137,7 +138,7 @@ export default function Sent() {
           )
         )
       ) : (
-        <div className="no-mails">No hay correos enviados.</div>
+        <NoMails mensaje="No hay correos en Enviados." />
       )}
     </MailboxLayout>
   );

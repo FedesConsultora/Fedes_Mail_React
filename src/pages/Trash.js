@@ -4,6 +4,7 @@ import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
+import NoMails from '../components/NoMails';
 
 export default function Trash() {
   const { user } = useUser();
@@ -163,7 +164,7 @@ export default function Trash() {
           )
         )
       ) : (
-        <div className="no-mails">No hay correos en la papelera.</div>
+         <NoMails mensaje="No hay correos en la Papelera." />
       )}
     </MailboxLayout>
   );
