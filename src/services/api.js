@@ -256,6 +256,19 @@ const api = {
     });
     return await ensure(res);
   },
+  async forzarActualizacionInbox() {
+    const res = await fetch(`${apiBase}/forzar_actualizacion_inbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({}),
+    });
+
+    const data = await toJson(res);
+    return data?.status === 'ok'
+      ? ok()
+      : { success: false, error: data?.mensaje || 'Error al forzar actualización' };
+  }
 };
 
 export default api;

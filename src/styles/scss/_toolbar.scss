@@ -22,10 +22,11 @@
   
     .toolbarIcon {
       cursor: pointer;
-      font-size: 1rem;
-      color: $text;
+      width: 18px;
+      height: 18px;
+      color: #42718a;
       opacity: 0.85;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease;
       margin-right: 0.80rem;
       .icon-unread {
         position: relative;

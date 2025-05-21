@@ -54,6 +54,40 @@ export default function Inbox() {
       showToast({ message: '❌ Error al actualizar favoritos.', type: 'error' });
     }
   };
+  const forzarActualizacion = async () => {
+    setLoadingMails(true);
+    try {
+      console.log('🔄 Forzando actualización de inbox...');
+      await api.forzarActualizacionInbox();
+      const { emails = [], total = 0 } = await api.obtenerInbox(user.email, 1, mailsPerPage);
+
+      console.log('📩 Emails recibidos:', emails.length);
+      if (emails.length) {
+        const mail = emails[0];
+        console.log('↪ remitente:', mail.de);
+        console.log('↪ asunto:', mail.asunto);
+        console.log('↪ return_path:', mail.return_path);
+        console.log('↪ reply_to:', mail.reply_to);
+        console.log('↪ sender:', mail.sender);
+        console.log('↪ responde_a_id:', mail.responde_a_id);
+        console.log('↪ referencias:', mail.referencias);
+        console.log('↪ mime_version:', mail.mime_version);
+        console.log('↪ x_google_smtp_source:', mail.x_google_smtp_source);
+        console.log('↪ x_gm_message_state:', mail.x_gm_message_state);
+        console.log('↪ dkim_signature:', mail.dkim_signature);
+      }
+
+      setMails(emails);
+      setTotalMails(total);
+      setSelectedIds([]);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('❌ Error al forzar actualización:', err);
+      showToast({ message: '❌ Error al forzar actualización', type: 'error' });
+    } finally {
+      setLoadingMails(false);
+    }
+  };
 
   const marcarComoLeidoIndividual = async (id, is_read = true) => {
     try {
@@ -161,7 +195,7 @@ export default function Inbox() {
       isRead={todosLeidos}
       currentPage={currentPage}
       totalMails={totalMails}
-      onReload={() => setLoadingMails(true)}
+      onReload={forzarActualizacion}
       onDeleteMultiple={eliminarSeleccionados}
       onToggleRead={toggleLecturaSeleccionados}
       onPrevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}
