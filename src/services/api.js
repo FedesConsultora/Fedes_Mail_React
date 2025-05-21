@@ -2,6 +2,9 @@
 import mockUsuario from '../mocks/mockUsuario';
 import mockEmails  from '../mocks/mockEmails';
 
+
+const cleanIds = ids => (Array.isArray(ids) ? ids.filter(Boolean).map(Number) : []);
+
 /* --------------------------------------------------------
    Config dinámico
 -------------------------------------------------------- */
@@ -201,26 +204,24 @@ const api = {
     return await ensure(res);
   },
 
-  async marcarComoSpam(mail_ids = []) {
-    const res = await fetch(`${apiBase}/mark_spam`, {
-      method: 'POST',
+  async marcarComoNoSpam(mail_ids = []) {
+    const res = await fetch(`${apiBase}/mark_not_spam`, {
+      method : 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials,
-      body: JSON.stringify({ mail_ids })
+      body   : JSON.stringify({ mail_ids: cleanIds(mail_ids) })
     });
-
     const { marcados = 0 } = await ensure(res);
     return ok({ marcados });
   },
 
-  async marcarComoNoSpam(mail_ids = []) {
-    const res = await fetch(`${apiBase}/mark_not_spam`, {
-      method: 'POST',
+  async marcarComoSpam(mail_ids = []) {
+    const res = await fetch(`${apiBase}/mark_spam`, {
+      method : 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials,
-      body: JSON.stringify({ mail_ids })
+      body   : JSON.stringify({ mail_ids: cleanIds(mail_ids) })
     });
-
     const { marcados = 0 } = await ensure(res);
     return ok({ marcados });
   },

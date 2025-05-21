@@ -72,7 +72,7 @@ export default function AppRouter() {
           }
         />
 
-        
+        <Route path="/spam/email/:id"     element={<MainLayout><EmailDetail /></MainLayout>} />
         <Route
           path="/spam"
           element={

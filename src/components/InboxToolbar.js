@@ -53,6 +53,17 @@ export default function InboxToolbar({
   const end = Math.min(currentPage * 50, totalMails);
   const hasSelection = Array.isArray(selected) && selected.length > 0;
 
+  const moveSelectionOutOfSpam = async () => {
+    if (selected.length === 0) return;
+    try {
+      await api.marcarComoNoSpam(selected);       // <- ya filtrado en api.js
+      showToast({ message: `📥 ${selected.length} correo(s) movidos a Recibidos`, type: 'success' });
+      onReload?.();                               // refrescamos lista
+    } catch {
+      showToast({ message: '❌ No se pudo mover', type: 'error' });
+    }
+  };
+
   return (
     <div className="inboxToolbar">
       <div className="actions">
@@ -73,7 +84,14 @@ export default function InboxToolbar({
                 <FaUndoAlt title="Restaurar seleccionados" />
               </button>
             )}
-
+            {currentFolder === 'spam' && (
+              <button
+                className="toolbarIcon"
+                onClick={moveSelectionOutOfSpam}
+              >
+                <FaInbox title="Mover a Recibidos" />
+              </button>
+            )}
             <button
               className="toolbarIcon"
               onClick={async () => {

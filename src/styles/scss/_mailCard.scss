@@ -163,6 +163,7 @@
       border-radius: 20px;
       padding: 0.2rem 0.6rem 0.2rem 0.4rem;
       font-size: 0.85rem;
+      cursor:pointer;
       color: #333;
       max-width: 160px;
       overflow: hidden;
@@ -188,6 +189,45 @@
     .more-attachments {
       font-size: 0.85rem;
       color: #666;
+    }
+  }
+}
+
+/* ───── modal preview ───── */
+.att-modal{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.55);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1200;
+  .att-dialog{
+    width:min(90vw,800px);
+    max-height:90vh;
+    background:#fff;
+    border-radius:8px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    position:relative;
+    .close-btn{
+      position:absolute; top:8px; right:8px;
+      background:none; border:none; color:#666; font-size:1.1rem;
+      cursor:pointer; &:hover{color:#000;}
+    }
+    .att-header{
+      display:flex; align-items:center; gap:.6rem;
+      padding:1rem;
+      background:#f1f3f4;
+      .download-btn{
+        margin-left:auto; display:flex; align-items:center; gap:.35rem;
+        background:#1a73e8; color:#fff; border:none; padding:.35rem .8rem;
+        border-radius:4px; font-size:.85rem; text-decoration:none;
+        &:hover{background:#1558c5;}
+      }
+    }
+    .att-body{
+      flex:1; padding:1rem; overflow:auto;
+      iframe,img{ width:100%; height:auto; }
+      iframe{ height:80vh; }
+      img{ object-fit:contain; }
     }
   }
 }
