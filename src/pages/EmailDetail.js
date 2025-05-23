@@ -127,52 +127,85 @@ export default function EmailDetail () {
     });
   };
 
- const handleReply = async () => {
-    const srv = isSent
-      ? api.prepareReplySent
-      : isTrash
-      ? api.prepareReply
-      : api.prepareReply;
+  const handleReply = async () => {
+    const currentMail = thread[openIx];
+    console.log('🔍 [Reply] currentMail:', currentMail);
+    console.log('🔍 [Reply] user.email:', user?.email);
 
-    const base = await srv(thread[openIx].id, user.email); 
-
-    if (base?.error) {
-      showToast({ message: `❌ ${base.error}`, type: 'error' });
+    if (!currentMail?.id || (!isSent && !user?.email)) {
+      showToast({ message: '❌ No se puede responder: datos incompletos', type: 'error' });
       return;
     }
 
-    setComposeData({
-      to: base.destinatario,
-      subject: base.asunto,
-      body: base.cuerpo_html,
-      tipo: 'respuesta',
-      responde_a_id: thread[openIx].id,
-    });
+    try {
+      const srv = isSent
+        ? api.prepareReplySent
+        : api.prepareReply;
+
+      const base = isSent
+        ? await srv(currentMail.id)
+        : await srv(currentMail.id, user.email);
+
+      console.log('✅ [Reply] Respuesta base:', base);
+
+      if (base?.error) {
+        showToast({ message: `❌ ${base.error}`, type: 'error' });
+        return;
+      }
+
+      setComposeData({
+        to: base.destinatario,
+        subject: base.asunto,
+        body: base.cuerpo_html,
+        tipo: 'respuesta',
+        responde_a_id: currentMail.id,
+      });
+    } catch (error) {
+      console.error('🔥 Error en handleReply:', error);
+      showToast({ message: '❌ Error al preparar la respuesta', type: 'error' });
+    }
   };
 
-  const handleForward = async () => {
-    const srv = isSent
-      ? api.prepareForwardSent
-      : isTrash
-      ? api.prepareForward
-      : api.prepareForward;
+ const handleForward = async () => {
+    const currentMail = thread[openIx];
+    console.log('🔍 [Forward] currentMail:', currentMail);
+    console.log('🔍 [Forward] user.email:', user?.email);
 
-    const base = await srv(thread[openIx].id, user.email); 
-
-    if (base?.error) {
-      showToast({ message: `❌ ${base.error}`, type: 'error' });
+    if (!currentMail?.id || (!isSent && !user?.email)) {
+      showToast({ message: '❌ No se puede reenviar: datos incompletos', type: 'error' });
       return;
     }
 
-    setComposeData({
-      to: '',
-      subject: base.asunto,
-      body: base.cuerpo_html,
-      attachments: base.adjuntos || [],
-      tipo: 'reenviar',
-      responde_a_id: thread[openIx].id,
-    });
+    try {
+      const srv = isSent
+        ? api.prepareForwardSent
+        : api.prepareForward;
+
+      const base = isSent
+        ? await srv(currentMail.id)
+        : await srv(currentMail.id, user.email);
+
+      console.log('✅ [Forward] Reenvío base:', base);
+
+      if (base?.error) {
+        showToast({ message: `❌ ${base.error}`, type: 'error' });
+        return;
+      }
+
+      setComposeData({
+        to: '',
+        subject: base.asunto,
+        body: base.cuerpo_html,
+        attachments: base.adjuntos || [],
+        tipo: 'reenviar',
+        responde_a_id: currentMail.id,
+      });
+    } catch (error) {
+      console.error('🔥 Error en handleForward:', error);
+      showToast({ message: '❌ Error al preparar el reenvío', type: 'error' });
+    }
   };
+
 
   /* ---------- loading ---------- */
   if (!rootMail) return <Loader message="Cargando correo…"/>;
