@@ -1,23 +1,23 @@
-/*  src/pages/EmailDetail.jsx  */
 import { useEffect, useState } from 'react';
-import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
-  FaChevronDown, FaChevronUp, FaVideo, FaMapMarkerAlt,
-  FaPaperclip, FaFileAlt, FaInbox
+  FaChevronDown, FaChevronUp, FaChevronRight,
+  FaVideo, FaMapMarkerAlt, FaPaperclip, FaFileAlt,
+  FaInbox, FaChevronCircleLeft, FaChevronCircleRight
 } from 'react-icons/fa';
-import SearchAndFilters from '../components/SearchAndFilters/SearchAndFilters';
-import EmailToolbar     from '../components/EmailToolbar';
-import api              from '../services/api';
-import { useToast }     from '../contexts/ToastContext';
-import Loader from '../components/Loader';
+import { useMatch, useNavigate, useParams, useLocation } from 'react-router-dom';
+import SearchAndFilters    from '../components/SearchAndFilters/SearchAndFilters';
+import EmailToolbar        from '../components/EmailToolbar';
 import ReplyForwardButtons from '../components/ReplyForwardButtons';
-import ComposeModal from '../components/ComposeModal';
+import Loader              from '../components/Loader';
+import api                 from '../services/api';
+import { useToast }        from '../contexts/ToastContext';
+import ReplyComposer       from '../components/ReplyComposer';
 
-/* ───── helpers adjuntos ───── */
-const fmtSize    = s => (typeof s === 'string' ? s : `${(s / 1024).toFixed(0)} KB`);
-const iconByMime = m => (m?.startsWith('image/') ? <FaPaperclip /> : <FaFileAlt />);
+/* ——— helpers adjuntos ——— */
+const fmtSize    = s => (typeof s === 'string' ? s : `${(s / 1024).toFixed(0)} KB`);
+const iconByMime = m => (m?.startsWith('image/') ? <FaPaperclip/> : <FaFileAlt/>);
 
-/* ───── parser ICS mínimo ───── */
+/* ——— parser ICS mínimo ——— */
 async function fetchAndParseICS (url) {
   const txt = await fetch(url).then(r => r.text());
   const g   = k => (txt.match(new RegExp(`${k}:(.+)`)) || [,''])[1].trim();
@@ -37,209 +37,200 @@ async function fetchAndParseICS (url) {
   };
 }
 
-/* ─────────────────────────── */
+/* ——————————————————— */
 export default function EmailDetail () {
-  const { id }        = useParams();
-  const location      = useLocation();
-  const navigate      = useNavigate();
-  const { showToast , showConfirmToast } = useToast();
+  /* ---------- router ---------- */
+  const { id } = useParams();
+  const nav    = useNavigate();
+  const loc    = useLocation();
+  const { showToast, showConfirmToast } = useToast();
 
-  /* carpeta de origen (para volver) */
-  const fromFolder = location.state?.from || (
-    location.pathname.includes('/sent')  ? 'sent'  :
-    location.pathname.includes('/trash') ? 'trash' :
-    location.pathname.includes('/spam')  ? 'spam'  : 'inbox'
+  const fromFolder = loc.state?.from || (
+    loc.pathname.includes('/sent')  ? 'sent'  :
+    loc.pathname.includes('/trash') ? 'trash' :
+    loc.pathname.includes('/spam')  ? 'spam'  : 'inbox'
   );
-
   const isSent  = Boolean(useMatch('/sent/email/:id'));
   const isTrash = Boolean(useMatch('/trash/email/:id'));
   const isSpam  = Boolean(useMatch('/spam/email/:id'));
 
-  /* ----- estado ----- */
-  const [mail , setMail ] = useState(null);
-  const [user , setUser ] = useState(null);
-  const [event, setEvent] = useState(null);
+  /* ---------- state ---------- */
+  const [rootMail , setRootMail ] = useState(null);   // respuesta raíz
+  const [thread   , setThread   ] = useState([]);     // hilo completo
+  const [openIx   , setOpenIx   ] = useState(null);   // índice expandido
+  const [event    , setEvent    ] = useState(null);   // evento ICS
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [composeData, setComposeData] = useState(null);
 
-  /* ----- fetch detalle ----- */
+  /* ---------- fetch detalle ---------- */
   useEffect(() => {
     const fn = isSent
       ? api.obtenerDetalleCorreoEnviado
       : isTrash
         ? api.obtenerDetalleCorreoEliminado
-        : api.obtenerDetalleCorreo;   // spam e inbox usan el mismo
+        : api.obtenerDetalleCorreo;
 
     fn(+id)
-      .then(setMail)
-      .catch(() => showToast({ message:'❌ No se pudo cargar el correo', type:'error' }));
+      .then(data => {
+        setRootMail(data);
+        const th = Array.isArray(data.thread) && data.thread.length ? data.thread : [data];
+        setThread(th);
+        setOpenIx(th.length - 1); // mostrar el más reciente
+      })
+      .catch(() => showToast({ message:'❌ No se pudo cargar el correo', type:'error' }));
   }, [id, isSent, isTrash, showToast]);
 
-  /* ----- remitente + ICS ----- */
+  /* ---------- evento ICS (mensaje abierto) ---------- */
   useEffect(() => {
-    if (!mail) return;
-
-    setUser({
-      name     : mail.senderName,
-      email    : mail.senderEmail,
-      domain   : mail.domain,
-      signedBy : mail.signedBy,
-      security : mail.security,
-      avatar   : 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
-    });
+    if (openIx == null || !thread.length) { setEvent(null); return; }
 
     (async () => {
-      const ics = mail.attachments?.find(a =>
-        a.mimetype === 'text/calendar' || a.name?.toLowerCase().endsWith('.ics')
-      );
+      const m   = thread[openIx];
+      const ics = m.attachments?.find(a => a.mimetype === 'text/calendar' || a.name?.toLowerCase().endsWith('.ics'));
       if (!ics) { setEvent(null); return; }
-
       try { setEvent(await fetchAndParseICS(ics.preview)); }
       catch { setEvent(null); }
     })();
-  }, [mail]);
+  }, [thread, openIx]);
+
+  /* ---------- helpers ---------- */
+  const totalMsgs = thread.length;
+  const prevMsg   = () => setOpenIx(i => (i > 0         ? i-1 : i));
+  const nextMsg   = () => setOpenIx(i => (i < totalMsgs-1 ? i+1 : i));
 
   /* ---------- acciones ---------- */
   const toggleRead = async nuevo => {
     try {
-      await api.setState({ folder: fromFolder, mail_ids:[mail.id], state:{ is_read:nuevo } });
-      setMail(m => ({ ...m, is_read:nuevo, state:nuevo ? 'read' : 'unread' }));
-    } catch {
-      showToast({ message:'❌ No se pudo actualizar', type:'error' });
-    }
+      await api.setState({ folder: fromFolder, mail_ids:[rootMail.id], state:{ is_read:nuevo } });
+      setRootMail(m => ({ ...m, is_read:nuevo, state:nuevo ? 'read' : 'unread' }));
+    } catch { showToast({ message:'❌ No se pudo actualizar', type:'error' }); }
   };
 
   const restoreFromTrash = async () => {
-    try {
-      await api.restoreMails([mail.id]);
-      showToast({ message:'♻️ Correo restaurado', type:'success' });
-      navigate('/');
-    } catch {
-      showToast({ message:'❌ No se pudo restaurar', type:'error' });
-    }
+    try { await api.restoreMails([rootMail.id]); nav('/'); }
+    catch { showToast({ message:'❌ No se pudo restaurar', type:'error' }); }
   };
 
   const removeFromSpam = () => {
-    if (!mail?.id) return;
+    if (!rootMail) return;
     showConfirmToast({
-      message    : '¿Mover este correo a Recibidos?',
-      type       : 'warning',
-      confirmText: 'Mover',
-      cancelText : 'Cancelar',
-      onConfirm  : async () => {
-        try {
-          await api.marcarComoNoSpam([mail.id]);
-          showToast({ message:'📥 Correo movido a Recibidos', type:'success' });
-          navigate('/');
-        } catch {
-          showToast({ message:'❌ No se pudo mover', type:'error' });
-        }
+      message     : '¿Mover este correo a Recibidos?',
+      type        : 'warning',
+      confirmText : 'Mover',
+      cancelText  : 'Cancelar',
+      onConfirm   : async () => {
+        try { await api.marcarComoNoSpam([rootMail.id]); nav('/'); }
+        catch { showToast({ message:'❌ No se pudo mover', type:'error' }); }
       }
     });
   };
 
   const handleReply = async () => {
-    const data = await api.prepareReply(mail.id);
+    const srv  = isSent ? api.prepareReplySent : api.prepareReply;
+    const base = await srv(thread[openIx].id);
+
     setComposeData({
-      to: data.destinatario,
-      subject: data.asunto,
-      body: data.cuerpo_html
+      to            : base.destinatario,
+      subject       : base.asunto,
+      body          : base.cuerpo_html,
+      tipo          : 'respuesta',           // 🆕
+      responde_a_id : thread[openIx].id,     // 🆕
     });
   };
 
   const handleForward = async () => {
-    const data = await api.prepareForward(mail.id);
+    const srv  = isSent ? api.prepareForwardSent : api.prepareForward;
+    const base = await srv(thread[openIx].id);
+
     setComposeData({
-      to: '',
-      subject: data.asunto,
-      body: data.cuerpo_html
+      to            : '',
+      subject       : base.asunto,
+      body          : base.cuerpo_html,
+      attachments   : base.adjuntos || [], 
+      tipo          : 'reenviar',            
+      responde_a_id : thread[openIx].id,     
     });
   };
 
   /* ---------- loading ---------- */
-  if (!mail) {
-    return <Loader message="Cargando correo…" />;
-  }
+  if (!rootMail) return <Loader message="Cargando correo…"/>;
 
-  /* ---------- render ---------- */
-  return (
-    <div className="inboxContainer">
-      <SearchAndFilters />
-
-      <EmailToolbar
-        mailId      ={mail.id}
-        isRead      ={mail.is_read}
-        onArchive   ={(!isTrash && !isSpam) ? () => alert('Archivar') : undefined}
-        onToggleRead={!isTrash && !isSpam   ? toggleRead            : undefined}
-        onRestore   ={isTrash ? restoreFromTrash
-                    : isSpam  ? removeFromSpam   : undefined}
-        restoreIcon ={isSpam ? <FaInbox/> : undefined}
-        restoreTitle={isSpam ? 'Mover a Recibidos' : 'Restaurar correo'}
-      />
-
-      <div className="email-detail">
-        <h2 className="subject">{mail.subject}</h2>
-
-        {/* -------- remitente -------- */}
-        {user && (
-          <div className="sender-row">
-            <img src={user.avatar} alt="" className="profile-pic" />
-            <div className="sender-info">
-              <span className="email-sender">{user.email}</span>
-
-              <div className="para-line">
-                <span>Para: {mail.recipients}</span>
-                <button
-                  className="toggle-details"
-                  onClick={() => setDetailsOpen(o => !o)}
-                >
-                  {detailsOpen ? <FaChevronUp/> : <FaChevronDown/>}
-                </button>
-              </div>
-
-              {detailsOpen && (
-                <div className="mail-details-dropdown">
-                  <p><b>De:</b> {user.name} &lt;{user.email}&gt;</p>
-                  <p><b>Responder-a:</b> {user.email}</p>
-                  <p><b>Para:</b> {mail.recipients}</p>
-                  <p><b>Fecha:</b> {mail.date}</p>
-                  <p><b>Enviado por:</b> {user.domain}</p>
-                  <p><b>Firmado por:</b> {user.signedBy}</p>
-                  <p><b>Seguridad:</b> {user.security}</p>
-                </div>
-              )}
+  /* ---------- helpers render ---------- */
+  const Adjuntos = ({ list = [] }) => list.length ? (
+    <div className="email-attachments">
+      <h4>Archivos adjuntos</h4>
+      <div className="attachments-list">
+        {list.map((att,i) => (
+          <a key={i} className="attachment-item" href={att.preview} download={att.name} target="_blank" rel="noopener noreferrer">
+            <div className="attachment-icon">{iconByMime(att.mimetype)}</div>
+            <div className="attachment-info">
+              <span className="attachment-name">{att.name}</span>
+              <span className="attachment-size">{fmtSize(att.size)}</span>
             </div>
-          </div>
-        )}
+          </a>
+        ))}
+      </div>
+    </div>
+  ):null;
 
-        {/* -------- evento calendario -------- */}
-        {event && (
+  const MiniHeader = (m, idx) => (
+    <div key={m.id} className={`thread-mini ${idx===openIx ? 'open' : ''}`} onClick={() => setOpenIx(idx)}>
+      {idx===openIx ? <FaChevronDown className="chevron"/> : <FaChevronRight className="chevron"/>}
+      <span className="from">{m.senderName || m.senderEmail}</span>
+      <span className="date">{m.date}</span>
+    </div>
+  );
+
+  const FullMessage = (m, idx) => {
+    const user = {
+      name     : m.senderName,
+      email    : m.senderEmail,
+      domain   : m.domain,
+      signedBy : m.signedBy,
+      security : m.security,
+      avatar   : 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y'
+    };
+    return (
+      <div key={m.id} className="thread-msg">
+        {/* —— cabecera —— */}
+        <div className="sender-row">
+          <img src={user.avatar} alt="avatar" className="profile-pic"/>
+          <div className="sender-info">
+            <span className="email-sender">{user.email}</span>
+            <div className="para-line">
+              <span>Para: {m.recipients}</span>
+              <button className="toggle-details" onClick={() => setDetailsOpen(o => !o)}>
+                {detailsOpen ? <FaChevronUp/> : <FaChevronDown/>}
+              </button>
+            </div>
+            {detailsOpen && (
+              <div className="mail-details-dropdown">
+                <p><b>De:</b> {user.name} &lt;{user.email}&gt;</p>
+                <p><b>Responder‑a:</b> {user.email}</p>
+                <p><b>Para:</b> {m.recipients}</p>
+                <p><b>Fecha:</b> {m.date}</p>
+                <p><b>Enviado por:</b> {user.domain}</p>
+                <p><b>Firmado por:</b> {user.signedBy}</p>
+                <p><b>Seguridad:</b> {user.security}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* —— evento calendario —— */}
+        {idx === openIx && event && (
           <div className={`calendar-event ${event.status}`}>
             <div className="calendar-date">
               <span className="day">{new Date(event.start).getDate()}</span>
-              <span className="month">
-                {new Date(event.start).toLocaleString('es-AR', { month:'short' })}
-              </span>
-              <span className="week">
-                {new Date(event.start).toLocaleDateString('es-AR', { weekday:'short' })}
-              </span>
+              <span className="month">{new Date(event.start).toLocaleString('es-AR', { month:'short' })}</span>
+              <span className="week">{new Date(event.start).toLocaleDateString('es-AR', { weekday:'short' })}</span>
             </div>
-
             <div className="calendar-info">
               <div className="title">{event.title}</div>
-              {event.status === 'cancelled' && (
-                <div className="status"><b>Se canceló</b> este evento.</div>
-              )}
-              {event.location && (
-                <div className="location"><FaMapMarkerAlt/> {event.location}</div>
-              )}
+              {event.status==='cancelled' && <div className="status"><b>Se canceló</b> este evento.</div>}
+              {event.location && <div className="location"><FaMapMarkerAlt/> {event.location}</div>}
               {event.url && (
-                <a
-                  className="join-button"
-                  href={event.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <a className="join-button" href={event.url} target="_blank" rel="noopener noreferrer">
                   <FaVideo/> Unirse a la videollamada
                 </a>
               )}
@@ -247,43 +238,49 @@ export default function EmailDetail () {
           </div>
         )}
 
-        {/* -------- cuerpo -------- */}
-        <div
-          className="email-body"
-          dangerouslySetInnerHTML={{ __html: mail.body }}
-        />
+        {/* —— cuerpo —— */}
+        <div className="email-body" dangerouslySetInnerHTML={{ __html:m.body }}/>
 
-        {/* -------- adjuntos -------- */}
-        {Array.isArray(mail.attachments) && mail.attachments.length > 0 && (
-          <div className="email-attachments">
-            <h4>Archivos adjuntos</h4>
-            <div className="attachments-list">
-              {mail.attachments.map((att, i) => (
-                <a
-                  key={i}
-                  href={att.preview}
-                  download={att.name}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="attachment-item"
-                >
-                  <div className="attachment-icon">{iconByMime(att.mimetype)}</div>
-                  <div className="attachment-info">
-                    <span className="attachment-name">{att.name}</span>
-                    <span className="attachment-size">{fmtSize(att.size)}</span>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-        <ReplyForwardButtons onReply={handleReply} onForward={handleForward} />
+        {/* —— adjuntos —— */}
+        <Adjuntos list={m.attachments}/>
       </div>
+    );
+  };
+
+  /* ---------- render ---------- */
+  return (
+    <div className="inboxContainer">
+      <SearchAndFilters/>
+
+      <EmailToolbar
+        mailId      ={rootMail.id}
+        isRead      ={rootMail.is_read}
+        onArchive   ={(!isTrash && !isSpam) ? () => alert('Archivar') : undefined}
+        onToggleRead={!isTrash && !isSpam   ? toggleRead            : undefined}
+        onRestore   ={isTrash ? restoreFromTrash : isSpam ? removeFromSpam : undefined}
+        restoreIcon ={isSpam ? <FaInbox/> : undefined}
+        restoreTitle={isSpam ? 'Mover a Recibidos' : 'Restaurar correo'}
+      />
+
+      {/* —— navegación dentro del hilo —— */}
+      {totalMsgs > 1 && (
+        <div className="thread-nav">
+          <button onClick={prevMsg} disabled={openIx===0}><FaChevronCircleLeft/></button>
+          <span>{openIx+1} / {totalMsgs}</span>
+          <button onClick={nextMsg} disabled={openIx===totalMsgs-1}><FaChevronCircleRight/></button>
+        </div>
+      )}
+
+      <div className="email-detail">
+        <h2 className="subject">{rootMail.subject}</h2>
+
+        {thread.map((m, idx) => idx === openIx ? FullMessage(m, idx) : MiniHeader(m, idx))}
+
+        <ReplyForwardButtons onReply={handleReply} onForward={handleForward}/>
+      </div>
+
       {composeData && (
-        <ComposeModal
-          onClose={() => setComposeData(null)}
-          initialData={composeData}
-        />
+        <ReplyComposer data={composeData} onClose={() => setComposeData(null)} />
       )}
     </div>
   );

@@ -1,0 +1,97 @@
+/* —— contenedor externo —— */
+.reply-composer-wrapper {
+  /* lo separamos un poco del último mensaje */
+  margin-top: 2.5rem;
+
+  /* mismo ancho que la columna de detalle */
+  width: 100%;
+
+  /* marco sutil de separación */
+  border-top: 1px solid #dadce0;
+  background: #fefefe;
+
+  /* leve sombreado estilo Gmail */
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+
+  /* bordes redondeados sólo abajo */
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+
+  /*  —— sobrescribimos la versión modal para que se adapte —— */
+  .compose-modal.embedded {
+    /* quitamos fixed y lo hacemos fluido */
+    position: static;
+    inset: auto;
+    transform: none;
+
+    /* ocupa todo el ancho disponible */
+    width: 100%;
+    max-width: 100%;
+
+    /* sin sombra ni borde externo (la envuelve .wrapper) */
+    box-shadow: none;
+    border-radius: 0;
+
+    /* unificamos tipografías con Gmail */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #202124;
+
+    /* -- CABECERA — la ocultamos (no hace falta en respuesta) */
+    .header { display: none; }
+
+    /* -- CAMPOS — un pelín más grandes */
+    .fields {
+      padding: 0.75rem 1.25rem;
+
+      input {
+        font-size: 0.92rem;
+        border-bottom-color: #e0e0e0;
+
+        &::placeholder { color:#757575; }
+      }
+      .to-line span {
+        color: #1a73e8;
+        font-size: 0.82rem;
+        font-weight: 500;
+        cursor: pointer;
+
+        &:hover { text-decoration: underline; }
+      }
+    }
+
+    /* -- TEXTAREA — ocupa más alto por defecto */
+    textarea {
+      min-height: 180px;
+      padding: 1.25rem 1.5rem;
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    /* -- FOOTER — alineado como Gmail */
+    .footer {
+      padding: 0.65rem 1.25rem;
+      background: #f6f8fc;
+      border-top: 1px solid #e0e0e0;
+
+      .send-btn {
+        background: #1a73e8;
+        box-shadow: 0 1px 0 rgba(60,64,67,.3);
+        transition: background .15s;
+
+        &:hover { background: #1669c1; }
+      }
+      .footer-icons {
+        svg { font-size: 1.25rem; }
+      }
+    }
+
+    /* -- PREVISUALIZACIÓN ADJUNTOS — ajustamos color */
+    .attachments-preview {
+      background: #fafafa;
+      border-top: 1px solid #eee;
+
+      .att-chip .rm-btn:hover { color:#d93025; }
+    }
+  } /* .compose-modal.embedded */
+}

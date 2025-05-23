@@ -80,20 +80,36 @@ const api = {
   },
 
   /* ---------- Enviar ---------- */
-  async enviarCorreo({ to, subject, html, text, attachments = [] }) {
+    async enviarCorreo({
+      to,
+      cc = '',
+      cco = '',
+      subject,
+      html,
+      text,
+      attachments = [],
+      tipo = 'nuevo',
+      responde_a_id = null,
+    }) {
     const body = {
-      destinatario: to,
-      asunto     : subject,
-      cuerpo_html: html,
-      cuerpo_text: text || html.replace(/<[^>]*>/g, ''),
-      adjuntos   : attachments  
+      destinatario : to,
+      cc,
+      cco,
+      asunto       : subject,
+      cuerpo_html  : html,
+      cuerpo_text  : text || html.replace(/<[^>]*>/g, ''),
+      adjuntos     : attachments,
+
+      /* 🧵 datos de hilo que espera el backend */
+      tipo,
+      responde_a_id,
     };
 
     const res  = await fetch(`${apiBase}/enviar_correo`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      credentials,
-      body: JSON.stringify(body)
+      method      : 'POST',
+      headers     : { 'Content-Type':'application/json' },
+      credentials ,
+      body        : JSON.stringify(body),
     });
 
     const data = await toJson(res);
@@ -101,7 +117,6 @@ const api = {
       ? ok()
       : { success:false, error:data?.mensaje || 'Error desconocido' };
   },
-
   /* ---------- Enviados ---------- */
   async obtenerEnviados(page = 1, limit = 50) {
     if (mock) return mockEmails;
@@ -268,7 +283,26 @@ const api = {
     return data?.status === 'ok'
       ? ok()
       : { success: false, error: data?.mensaje || 'Error al forzar actualización' };
-  }
+  },
+  async prepareReplySent(mailId) {
+    const res = await fetch(`${apiBase}/prepare_reply_sent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
+
+  async prepareForwardSent(mailId) {
+    const res = await fetch(`${apiBase}/prepare_forward_sent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
 };
 
 export default api;

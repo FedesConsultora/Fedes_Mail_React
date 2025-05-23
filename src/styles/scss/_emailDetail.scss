@@ -1,6 +1,4 @@
-/*  src/styles/email-detail.scss  */
-
-/*  —— contenedor general —— */
+/* —— contenedor general —— */
 .email-detail {
   padding: 2rem;
   border-radius: $border-radius;
@@ -55,7 +53,6 @@
           padding: 0;
           display: flex;
           align-items: center;
-
           svg { font-size: 0.9rem; }
         }
       }
@@ -68,12 +65,27 @@
         font-size: 0.85rem;
         color: #444;
         box-shadow: 0 0 6px rgba(0,0,0,0.05);
-
-        p { margin: 0.2rem 0; }
-
-        .important { color: #c0392b; font-weight: 500; }
+        p { margin: 0.25rem 0; }
       }
     }
+  }
+
+  /* —— bloque navegación entre mensajes —— */
+  + .thread-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 0.3rem 0 1rem;
+    button {
+      border: none;
+      background: transparent;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #666;
+      &:disabled { opacity: 0.3; cursor: default; }
+    }
+    span { font-size: 0.85rem; color: #555; }
   }
 
   /* —— bloque evento calendario —— */
@@ -89,7 +101,7 @@
 
     &.cancelled {
       opacity: 0.6;
-      .calendar-date { border-color: #c0392b; }
+      border-left-color: #c0392b;
       .calendar-info .status { color: #c0392b; }
     }
 
@@ -98,7 +110,6 @@
       min-width: 56px;
       border-right: 1px solid #dce3f2;
       padding-right: 0.75rem;
-
       .day   { font-size: 1.4rem; font-weight: 700; color: #202124; }
       .month { text-transform: uppercase; font-size: 0.75rem; color: #5f6368; }
       .week  { font-size: 0.75rem; color: #5f6368; }
@@ -109,11 +120,9 @@
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
-
       .title   { font-weight: 600; color: $text; }
       .status  { font-size: 0.9rem; }
       .location{ font-size: 0.85rem; color: #444; display: flex; align-items: center; gap: .35rem; }
-
       .join-button {
         margin-top: 0.25rem;
         display: inline-flex;
@@ -127,11 +136,10 @@
         border-radius: 4px;
         text-decoration: none;
         transition: background .2s;
-
         &:hover { background: darken(#4285f4, 6%); }
       }
     }
-  } // .calendar-event
+  }
 
   /* —— cuerpo del mail —— */
   .email-body {
@@ -139,29 +147,20 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: $text;
-
     ul { padding-left: 1.2rem; }
     p  { margin-bottom: 1rem; }
     img { max-width: 100%; height: auto; border-radius: 4px; }
   }
-} // .email-detail
+}
 
 /* —— adjuntos —— */
 .email-attachments {
   margin-top: 1.5rem;
-
-  h4 {
-    font-size: 0.95rem;
-    color: $text;
-    margin-bottom: 0.8rem;
-    font-weight: 600;
-  }
-
+  h4 { font-size: 0.95rem; color: $text; margin-bottom: 0.8rem; font-weight: 600; }
   .attachments-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-
     .attachment-item {
       display: flex;
       align-items: center;
@@ -172,47 +171,54 @@
       transition: background .2s ease;
       box-shadow: inset 0 0 0 1px #dcdfe4;
       color: inherit;
-
-      &:hover {
-        background: #e6eefc;
-        box-shadow: inset 0 0 0 1px #c9d4f2;
-      }
-
-      .attachment-icon {
-        font-size: 1.2rem;
-        margin-right: 0.7rem;
-        color: #555;
-      }
-
+      &:hover { background: #e6eefc; box-shadow: inset 0 0 0 1px #c9d4f2; }
+      .attachment-icon { font-size: 1.2rem; margin-right: 0.7rem; color: #555; }
       .attachment-info {
         display: flex;
         flex-direction: column;
-
-        .attachment-name {
-          font-weight: 500;
-          font-size: 0.92rem;
-          color: $text;
-          max-width: 180px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .attachment-size {
-          font-size: 0.78rem;
-          color: #888;
-        }
+        .attachment-name { font-weight: 500; font-size: 0.92rem; color: $text; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+        .attachment-size { font-size: 0.78rem; color: #888; }
       }
     }
   }
-  
-
 }
+
+/* —— mini‑cabeceras del hilo —— */
+.thread-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+  margin: 0.2rem 0;
+  background: #f9f9f9;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  &.open { background: #eaf1fe; }
+  .chevron { font-size: 0.9rem; color: #888; transition: transform .2s; }
+  .from    { font-weight: 600; color: $text; max-width: 180px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .date    { margin-left: auto; font-size: 0.8rem; color: #777; }
+  &:hover { background: #eef3fb; }
+}
+
+/* —— mensaje expandido dentro del hilo —— */
+.thread-msg {
+  padding: 1rem 0;
+  border-top: 1px solid #e3e3e3;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  .sender-row { margin-top: 0.3rem; }
+  .email-body { margin-top: 0.5rem; }
+}
+
+/* —— reply / forward buttons —— */
 .reply-forward-actions {
   margin-top: 1.5rem;
   display: flex;
   gap: 1rem;
   padding-left: 2rem;
-
   .action-btn {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
@@ -223,27 +229,9 @@
     transition: background 0.2s ease;
     box-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
-
-  .reply {
-    background-color: #f0f4ff;
-    color: #1a73e8;
-
-    &:hover {
-      background-color: #e0ecff;
-    }
-  }
-
-  .forward {
-    background-color: #f9f9f9;
-    color: #444;
-
-    &:hover {
-      background-color: #efefef;
-    }
-  }
+  .reply   { background-color: #f0f4ff; color: #1a73e8; &:hover { background-color: #e0ecff; } }
+  .forward { background-color: #f9f9f9; color: #444;       &:hover { background-color: #efefef; } }
 }
+
 /* —— animación fade in —— */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);   }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0);} }

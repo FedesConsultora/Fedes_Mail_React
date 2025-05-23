@@ -1,5 +1,5 @@
 /*  src/components/ComposeModal.jsx  */
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   FaTimes, FaWindowMinimize, FaExpand,
   FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt
@@ -9,16 +9,20 @@ import Picker  from '@emoji-mart/react';
 import data    from '@emoji-mart/data';
 import api     from '../services/api';
 import { useToast } from '../contexts/ToastContext';
-import { useEffect } from 'react';
 
-
+/* ——— constantes ——— */
 const MAX_MB = 25;
 const MAX_B  = MAX_MB * 1024 * 1024;
 
-/* ─────────────────────────────────────────────────────────── */
-
-export default function ComposeModal({ onClose, initialData = {} }) {
-  /* ────────────── formulario ────────────── */
+/* ————————————————————————————————————————————— */
+export default function ComposeModal({
+  onClose,
+  initialData = {},        // se usa sólo en modo «respuesta / reenviar»
+  modo        = 'modal',   // 'modal' | 'respuesta'
+  onSend      = null,       // si lo pasás, ComposeModal delega el envío
+  preloadedFiles = []
+}) {
+  /* —— estados —— */
   const [form, setForm] = useState({
     to     : initialData.to      || '',
     cc     : '',
@@ -29,25 +33,21 @@ export default function ComposeModal({ onClose, initialData = {} }) {
   const [showCc,  setShowCc ] = useState(false);
   const [showCco, setShowCco] = useState(false);
 
-  /* ────────────── adjuntos ────────────── */
-  const [files, setFiles] = useState([]);    // {file, base64, url}
+  /* —— adjuntos —— */
+  const [files, setFiles] = useState([]);      // {file, base64, url}
   const totalSize = files.reduce((sum,f)=>sum+f.file.size,0);
 
-  /* ────────────── UX ────────────── */
+  /* —— UX —— */
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending  , setSending  ] = useState(false);
   const textareaRef               = useRef();
   const { showToast }             = useToast();
 
-  /* ────────────── helpers ────────────── */
-  const change = e => setForm({...form, [e.target.name]:e.target.value});
+  /* —— helpers —— */
+  const isReply = modo === 'respuesta';
+  const change  = e => setForm({ ...form, [e.target.name]: e.target.value });
 
-  /* ======= drag & drop ======= */
-  const prevent = e => e.preventDefault();
-  const onDrop  = e =>{
-    e.preventDefault();
-    processFiles(Array.from(e.dataTransfer.files));
-  };
+  /* —— cuando cambian los datos iniciales (Reply/Forward) —— */
   useEffect(() => {
     setForm({
       to     : initialData.to      || '',
@@ -56,13 +56,31 @@ export default function ComposeModal({ onClose, initialData = {} }) {
       subject: initialData.subject || '',
       body   : initialData.body    || ''
     });
+    // limpiamos adjuntos al cambiar de hilo
+    setFiles([]);
   }, [initialData]);
+  
+  /* —— si recibimos adjuntos precargados (Forward) —— */
+  useEffect(() => {
+    if (!preloadedFiles.length) return;
+    // evitamos duplicar si el usuario vuelve atrás
+    setFiles(prev => [...prev, ...preloadedFiles.filter(
+      p => !prev.some(f => f.file.name === p.file.name && f.file.size === p.file.size)
+    )]);
+  }, [preloadedFiles]);
+
+  /* ===== drag & drop de archivos ===== */
+  const prevent = e => e.preventDefault();
+  const onDrop  = e => {
+    e.preventDefault();
+    processFiles(Array.from(e.dataTransfer.files));
+  };
   async function processFiles(list){
-    const nuevos=[];
+    const nuevos = [];
     for (const file of list){
       if (files.some(f=>f.file.name===file.name && f.file.size===file.size)) continue;
       if (file.size + totalSize > MAX_B){
-        showToast({message:`📁 '${file.name}' sobrepasa el límite de ${MAX_MB} MB`, type:'warning'});
+        showToast({message:`📁 '${file.name}' sobrepasa los ${MAX_MB} MB`, type:'warning'});
         continue;
       }
       const base64 = await toB64(file);
@@ -70,23 +88,20 @@ export default function ComposeModal({ onClose, initialData = {} }) {
     }
     setFiles(f=>[...f, ...nuevos]);
   }
-
   const toB64 = file => new Promise(res=>{
-    const r=new FileReader();
+    const r = new FileReader();
     r.onload = () => res(r.result.split(',')[1]);
     r.readAsDataURL(file);
   });
 
-  /* ======= enviar ======= */
-  const handleSend = async () =>{
+  /* ===== envío ===== */
+  const doSend = async () => {
     if (!form.to || !form.subject){
-      return showToast({message:'⚠️ "Para" y "Asunto" son obligatorios', type:'warning'});
+      return showToast({message:'⚠️ «Para» y «Asunto» son obligatorios', type:'warning'});
     }
     if (totalSize > MAX_B){
-      return showToast({message:`⚠️ Adjuntos superan ${MAX_MB} MB`, type:'warning'});
+      return showToast({message:`⚠️ Adjuntos superan los ${MAX_MB} MB`, type:'warning'});
     }
-
-    setSending(true);
 
     const attachments = files.map(({file, base64})=>({
       name    : file.name,
@@ -95,24 +110,36 @@ export default function ComposeModal({ onClose, initialData = {} }) {
       size    : file.size
     }));
 
+    // permitir que el padre se encargue (ReplyComposer)
+    if (typeof onSend === 'function'){
+      return onSend({ ...form, attachments });
+    }
+
+    /* —— envío clásico desde el «Redactar» —— */
+    setSending(true);
+
     const { success, error } = await api.enviarCorreo({
-      to        : form.to,
-      subject   : form.subject,
-      html      : form.body,
-      text      : form.body,
-      attachments
+      to         : form.to,
+      cc         : form.cc,
+      cco        : form.cco,
+      subject    : form.subject,
+      html       : form.body,
+      text       : form.body,
+      attachments,
+      tipo       : 'nuevo',          
     });
 
     setSending(false);
-    if (success){
-      showToast({message:'📨 Correo enviado', type:'success'});
+
+    if (success) {
+      showToast({ message:'📨 Correo enviado', type:'success' });
       onClose();
-    }else{
-      showToast({message:`❌ ${error}`, type:'error'});
+    } else {
+      showToast({ message:`❌ ${error}`, type:'error' });
     }
   };
 
-  /* ======= emojis ======= */
+  /* ===== emojis ===== */
   const insertEmoji = e =>{
     const t = textareaRef.current;
     const {selectionStart:s, selectionEnd:eIdx} = t;
@@ -124,24 +151,26 @@ export default function ComposeModal({ onClose, initialData = {} }) {
     });
   };
 
-  /* ────────────── render ────────────── */
+  /* ——— render ——— */
   return (
     <div
-      className="compose-modal"
+      className={`compose-modal ${isReply ? 'embedded' : ''}`}
       onDragOver={prevent}
       onDrop={onDrop}
     >
-      {/* ── HEADER ─────────────────────── */}
-      <div className="header">
-        <span>Mensaje nuevo</span>
-        <div className="header-actions">
-          <FaWindowMinimize title="Minimizar"/>
-          <FaExpand          title="Expandir"/>
-          <FaTimes onClick={onClose} title="Cerrar"/>
+      {/* —— encabezado —— */}
+      {!isReply && (
+        <div className="header">
+          <span>Mensaje nuevo</span>
+          <div className="header-actions">
+            <FaWindowMinimize title="Minimizar"/>
+            <FaExpand          title="Expandir"/>
+            <FaTimes onClick={onClose} title="Cerrar"/>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ── CAMPOS ─────────────────────── */}
+      {/* —— campos —— */}
       <div className="fields">
         <div className="to-line">
           <input name="to" placeholder="Para" value={form.to} onChange={change}/>
@@ -153,7 +182,7 @@ export default function ComposeModal({ onClose, initialData = {} }) {
         <input name="subject" placeholder="Asunto" value={form.subject} onChange={change}/>
       </div>
 
-      {/* ── BODY ───────────────────────── */}
+      {/* —— cuerpo —— */}
       <textarea
         ref={textareaRef}
         name="body"
@@ -162,53 +191,33 @@ export default function ComposeModal({ onClose, initialData = {} }) {
         onChange={change}
       />
 
-      {/* ── ADJUNTOS ───────────────────── */}
-      {files.length > 0 && (
+      {/* —— adjuntos —— */}
+      {files.length>0 && (
         <div className="attachments-preview">
-          {files.map(({file, url}, i)=>(
+          {files.map(({file,url},i)=>(
             <div key={i} className="att-chip">
-              {/* icono según tipo */}
               {file.type.startsWith('image/')
                 ? <FaFileImage/>
-                : file.type === 'application/pdf'
+                : file.type==='application/pdf'
                   ? <FaFilePdf/>
-                  : <FaFileAlt/>
-              }
-
-              {/* descarga al hacer click en el nombre */}
-              <a
-                href={url}
-                download={file.name}
-                className="filename"
-                title="Descargar"
-              >
-                {file.name}
-              </a>
-
-              <span className="size"> ({(file.size/1024).toFixed(0)} KB) </span>
-
-              {/* quitar adjunto */}
-              <FaTimes
-                className="rm-btn"
-                title="Quitar"
-                onClick={()=>setFiles(f=>f.filter((_,idx)=>idx!==i))}
-              />
+                  : <FaFileAlt/>}
+              <a href={url} download={file.name} className="filename">{file.name}</a>
+              <span className="size">({(file.size/1024).toFixed(0)} KB)</span>
+              <FaTimes className="rm-btn" onClick={()=>setFiles(f=>f.filter((_,idx)=>idx!==i))}/>
             </div>
           ))}
-
-          {/* indicador de uso de espacio */}
           <div className="total">
-            {`Usado ${(totalSize/1024/1024).toFixed(1)} MB de ${MAX_MB} MB`}
+            Usado {(totalSize/1024/1024).toFixed(1)} MB / {MAX_MB} MB
           </div>
         </div>
       )}
 
-      {/* ── FOOTER ─────────────────────── */}
+      {/* —— footer —— */}
       <div className="footer">
         <button
           className="send-btn"
-          disabled={sending || totalSize > MAX_B}
-          onClick={handleSend}
+          disabled={sending || totalSize>MAX_B}
+          onClick={doSend}
         >
           {sending ? 'Enviando…' : 'Enviar'}
         </button>
@@ -223,12 +232,11 @@ export default function ComposeModal({ onClose, initialData = {} }) {
               onChange={e=>processFiles(Array.from(e.target.files))}
             />
           </label>
-
           <IoMdHappy title="Emoji" onClick={()=>setShowEmoji(!showEmoji)}/>
         </div>
       </div>
 
-      {/* ── EMOJI POPOVER ──────────────── */}
+      {/* —— selector de emojis —— */}
       {showEmoji && (
         <div className="emoji-popover">
           <Picker data={data} onEmojiSelect={insertEmoji} theme="light"/>
