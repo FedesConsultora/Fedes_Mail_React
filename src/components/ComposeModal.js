@@ -154,7 +154,7 @@ export default function ComposeModal({
   /* ——— render ——— */
   return (
     <div
-      className={`compose-modal ${isReply ? 'embedded' : ''}`}
+      className={`compose-modal ${modo === 'respuesta' ? 'embedded' : ''}`}
       onDragOver={prevent}
       onDrop={onDrop}
     >

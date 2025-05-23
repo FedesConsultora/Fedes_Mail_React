@@ -126,31 +126,44 @@ export default function EmailDetail () {
   };
 
   const handleReply = async () => {
-    const srv  = isSent ? api.prepareReplySent : api.prepareReply;
+    const srv = isSent
+      ? api.prepareReplySent
+      : isTrash
+      ? api.prepareReply 
+      : api.prepareReply;
+
     const base = await srv(thread[openIx].id);
+    if (base?.error) return showToast({ message: `❌ ${base.error}`, type: 'error' });
 
     setComposeData({
-      to            : base.destinatario,
-      subject       : base.asunto,
-      body          : base.cuerpo_html,
-      tipo          : 'respuesta',           // 🆕
-      responde_a_id : thread[openIx].id,     // 🆕
+      to: base.destinatario,
+      subject: base.asunto,
+      body: base.cuerpo_html,
+      tipo: 'respuesta',
+      responde_a_id: thread[openIx].id,
     });
   };
 
   const handleForward = async () => {
-    const srv  = isSent ? api.prepareForwardSent : api.prepareForward;
+    const srv = isSent
+      ? api.prepareForwardSent
+      : isTrash
+      ? api.prepareForward
+      : api.prepareForward;
+
     const base = await srv(thread[openIx].id);
+    if (base?.error) return showToast({ message: `❌ ${base.error}`, type: 'error' });
 
     setComposeData({
-      to            : '',
-      subject       : base.asunto,
-      body          : base.cuerpo_html,
-      attachments   : base.adjuntos || [], 
-      tipo          : 'reenviar',            
-      responde_a_id : thread[openIx].id,     
+      to: '',
+      subject: base.asunto,
+      body: base.cuerpo_html,
+      attachments: base.adjuntos || [],
+      tipo: 'reenviar',
+      responde_a_id: thread[openIx].id,
     });
   };
+
 
   /* ---------- loading ---------- */
   if (!rootMail) return <Loader message="Cargando correo…"/>;
@@ -250,6 +263,7 @@ export default function EmailDetail () {
   /* ---------- render ---------- */
   return (
     <div className="inboxContainer">
+      
       <SearchAndFilters/>
 
       <EmailToolbar

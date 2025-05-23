@@ -9,10 +9,8 @@ import {
   FaExclamationCircle // 👈 ícono para SPAM
 } from 'react-icons/fa';
 import ComposeButton from '../ComposeButton';
-import ComposeModal from '../ComposeModal';
 
-function Sidebar({ isCollapsed }) {
-  const [showCompose, setShowCompose] = useState(false);
+function Sidebar({ isCollapsed, onComposeClick  }) {
 
   const logoURL = useMemo(() => (
     isCollapsed
@@ -25,8 +23,8 @@ function Sidebar({ isCollapsed }) {
       <div className="logoEiconos">
         <img src={logoURL} alt="Fedes" />
 
-        <ComposeButton onClick={() => setShowCompose(true)} />
-
+        <ComposeButton onClick={onComposeClick} />
+        
         <nav>
           <ul>
             <li>
@@ -61,8 +59,6 @@ function Sidebar({ isCollapsed }) {
       <div className="config">
         <FaCog /> {!isCollapsed && <span>Configuraciones</span>}
       </div>
-
-      {showCompose && <ComposeModal onClose={() => setShowCompose(false)} />}
     </aside>
   );
 }
