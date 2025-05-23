@@ -25,7 +25,7 @@ const ok     = (extra = {}) => ({ success: true, ...extra });
 const toJson = (res) =>
   res
     .json()
-    .catch(() => ({}));                     // evita crash si no hay JSON
+    .catch(() => ({}));                     
 
 const ensure = async (res) => {
   const data = await toJson(res);
@@ -252,22 +252,22 @@ const api = {
     const { emails = [], total = 0 } = await ensure(res);
     return { emails, total };
   },
-  async prepareReply(mailId) {
+  async prepareReply(mailId, email) {
     const res = await fetch(`${apiBase}/prepare_reply`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials,
-      body: JSON.stringify({ mail_id: mailId }),
+      body: JSON.stringify({ mail_id: mailId, email }) 
     });
     return await ensure(res);
   },
 
-  async prepareForward(mailId) {
+  async prepareForward(mailId, email) {
     const res = await fetch(`${apiBase}/prepare_forward`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials,
-      body: JSON.stringify({ mail_id: mailId }),
+      body: JSON.stringify({ mail_id: mailId, email }) 
     });
     return await ensure(res);
   },

@@ -12,6 +12,7 @@ import Loader              from '../components/Loader';
 import api                 from '../services/api';
 import { useToast }        from '../contexts/ToastContext';
 import ReplyComposer       from '../components/ReplyComposer';
+import { useUser } from '../contexts/UserContext';
 
 /* ——— helpers adjuntos ——— */
 const fmtSize    = s => (typeof s === 'string' ? s : `${(s / 1024).toFixed(0)} KB`);
@@ -44,6 +45,7 @@ export default function EmailDetail () {
   const nav    = useNavigate();
   const loc    = useLocation();
   const { showToast, showConfirmToast } = useToast();
+  const { user } = useUser();
 
   const fromFolder = loc.state?.from || (
     loc.pathname.includes('/sent')  ? 'sent'  :
@@ -125,15 +127,19 @@ export default function EmailDetail () {
     });
   };
 
-  const handleReply = async () => {
+ const handleReply = async () => {
     const srv = isSent
       ? api.prepareReplySent
       : isTrash
-      ? api.prepareReply 
+      ? api.prepareReply
       : api.prepareReply;
 
-    const base = await srv(thread[openIx].id);
-    if (base?.error) return showToast({ message: `❌ ${base.error}`, type: 'error' });
+    const base = await srv(thread[openIx].id, user.email); 
+
+    if (base?.error) {
+      showToast({ message: `❌ ${base.error}`, type: 'error' });
+      return;
+    }
 
     setComposeData({
       to: base.destinatario,
@@ -151,8 +157,12 @@ export default function EmailDetail () {
       ? api.prepareForward
       : api.prepareForward;
 
-    const base = await srv(thread[openIx].id);
-    if (base?.error) return showToast({ message: `❌ ${base.error}`, type: 'error' });
+    const base = await srv(thread[openIx].id, user.email); 
+
+    if (base?.error) {
+      showToast({ message: `❌ ${base.error}`, type: 'error' });
+      return;
+    }
 
     setComposeData({
       to: '',
@@ -163,7 +173,6 @@ export default function EmailDetail () {
       responde_a_id: thread[openIx].id,
     });
   };
-
 
   /* ---------- loading ---------- */
   if (!rootMail) return <Loader message="Cargando correo…"/>;
@@ -263,7 +272,7 @@ export default function EmailDetail () {
   /* ---------- render ---------- */
   return (
     <div className="inboxContainer">
-      
+
       <SearchAndFilters/>
 
       <EmailToolbar

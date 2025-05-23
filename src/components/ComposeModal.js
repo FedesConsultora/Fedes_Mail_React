@@ -23,6 +23,7 @@ export default function ComposeModal({
   preloadedFiles = []
 }) {
   /* —— estados —— */
+  const hasInitialized = useRef(false);
   const [form, setForm] = useState({
     to     : initialData.to      || '',
     cc     : '',
@@ -49,15 +50,17 @@ export default function ComposeModal({
 
   /* —— cuando cambian los datos iniciales (Reply/Forward) —— */
   useEffect(() => {
-    setForm({
-      to     : initialData.to      || '',
-      cc     : '',
-      cco    : '',
-      subject: initialData.subject || '',
-      body   : initialData.body    || ''
-    });
-    // limpiamos adjuntos al cambiar de hilo
-    setFiles([]);
+    if (!hasInitialized.current) {
+      setForm({
+        to     : initialData.to      || '',
+        cc     : '',
+        cco    : '',
+        subject: initialData.subject || '',
+        body   : initialData.body    || ''
+      });
+      setFiles([]);
+      hasInitialized.current = true;
+    }
   }, [initialData]);
   
   /* —— si recibimos adjuntos precargados (Forward) —— */
