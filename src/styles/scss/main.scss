@@ -16,11 +16,8 @@
 @import 'noMails';
 @import 'ReplyComposer';
 
-.openChatButton{
-  display: none !important;
-}
 
-.o-livechat-LivechatButton {
+.btn.o-livechat-LivechatButton {
   display: none !important;
 }
 
@@ -29,3 +26,4 @@
   z-index: 999999 !important;
   position: fixed !important;
 }
+

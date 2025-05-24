@@ -1,46 +1,101 @@
-/* —— contenedor externo —— */
+/* ──────────────────────────────────────────────
+   Componente ReplyComposer – Estilos embebidos
+────────────────────────────────────────────── */
+
 .reply-composer-wrapper {
-  /* lo separamos un poco del último mensaje */
   margin-top: 2.5rem;
-
-  /* mismo ancho que la columna de detalle */
   width: 100%;
-
-  /* marco sutil de separación */
   border-top: 1px solid #dadce0;
   background: #fefefe;
-
-  /* leve sombreado estilo Gmail */
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
-
-  /* bordes redondeados sólo abajo */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
   border-radius: 0 0 12px 12px;
   overflow: hidden;
+  animation: slideIn 0.3s ease;
 
-  /*  —— sobrescribimos la versión modal para que se adapte —— */
+  &.closing {
+    animation: slideOut 0.25s ease forwards;
+  }
+
+  &.minimized {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+
+    .compose-modal {
+      display: none;
+    }
+  }
+
+  .composer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    background: #f1f3f4;
+    border-bottom: 1px solid #dadce0;
+
+    .user-avatar-block {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .reply-icon {
+        font-size: 1rem;
+        color: #1a73e8;
+      }
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin: 0;
+      color: #1a202c;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60vw;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      margin-left: 0.6rem;
+      font-size: 1.1rem;
+      cursor: pointer;
+      color: #5f6368;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #202124;
+      }
+
+      &.close-button:hover {
+        color: #d93025;
+      }
+    }
+  }
+
   .compose-modal.embedded {
-    /* quitamos fixed y lo hacemos fluido */
     position: static;
     inset: auto;
     transform: none;
-
-    /* ocupa todo el ancho disponible */
     width: 100%;
     max-width: 100%;
-
-    /* sin sombra ni borde externo (la envuelve .wrapper) */
     box-shadow: none;
     border-radius: 0;
-
-    /* unificamos tipografías con Gmail */
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     color: #202124;
 
-    /* -- CABECERA — la ocultamos (no hace falta en respuesta) */
-    .header { display: none; }
+    .header {
+      display: none;
+    }
 
-    /* -- CAMPOS — un pelín más grandes */
     .fields {
       padding: 0.75rem 1.25rem;
 
@@ -48,19 +103,23 @@
         font-size: 0.92rem;
         border-bottom-color: #e0e0e0;
 
-        &::placeholder { color:#757575; }
+        &::placeholder {
+          color: #757575;
+        }
       }
+
       .to-line span {
         color: #1a73e8;
         font-size: 0.82rem;
         font-weight: 500;
         cursor: pointer;
 
-        &:hover { text-decoration: underline; }
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
 
-    /* -- TEXTAREA — ocupa más alto por defecto */
     textarea {
       min-height: 180px;
       padding: 1.25rem 1.5rem;
@@ -68,7 +127,6 @@
       line-height: 1.55;
     }
 
-    /* -- FOOTER — alineado como Gmail */
     .footer {
       padding: 0.65rem 1.25rem;
       background: #f6f8fc;
@@ -76,22 +134,164 @@
 
       .send-btn {
         background: #1a73e8;
-        box-shadow: 0 1px 0 rgba(60,64,67,.3);
-        transition: background .15s;
+        box-shadow: 0 1px 0 rgba(60, 64, 67, 0.3);
+        transition: background 0.15s;
 
-        &:hover { background: #1669c1; }
+        &:hover {
+          background: #1669c1;
+        }
       }
-      .footer-icons {
-        svg { font-size: 1.25rem; }
+
+      .footer-icons svg {
+        font-size: 1.25rem;
       }
     }
 
-    /* -- PREVISUALIZACIÓN ADJUNTOS — ajustamos color */
     .attachments-preview {
       background: #fafafa;
       border-top: 1px solid #eee;
 
-      .att-chip .rm-btn:hover { color:#d93025; }
+      .att-chip .rm-btn:hover {
+        color: #d93025;
+      }
     }
-  } /* .compose-modal.embedded */
+  }
+
+  .original-message-preview {
+    padding: 1rem 1.25rem;
+    background: #f9f9f9;
+    border-top: 1px solid #e0e0e0;
+    color: #3c4043;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    animation: fadeInUp 0.3s ease;
+    max-height: 300px;
+    overflow-y: auto;
+
+    b {
+      color: #202124;
+    }
+
+    table {
+      max-width: 100%;
+      border-collapse: collapse;
+    }
+
+    td, th {
+      padding: 0.25rem 0.5rem;
+    }
+
+    a {
+      color: #1a73e8;
+    }
+  }
+}
+
+.reply-forward-wrapper {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .action-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+
+  .reply {
+    background-color: #eaf1fb;
+    color: #1a73e8;
+
+    &:hover {
+      background-color: #d2e3fc;
+    }
+  }
+
+  .forward {
+    background-color: #f1f3f4;
+    color: #444;
+
+    &:hover {
+      background-color: #e0e0e0;
+    }
+  }
+}
+
+.compose-modal.embedded.restore-animation {
+  animation: fadeInUp 0.3s ease;
+}
+
+.original-message-preview {
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  margin: 1rem 1.25rem;
+  padding: 1rem 1.5rem;
+  background: #f1f3f4;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 4px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.5rem 0;
+  }
+
+  a {
+    word-break: break-all;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

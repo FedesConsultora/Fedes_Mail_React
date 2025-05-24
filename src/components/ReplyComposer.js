@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react';
 import ComposeModal from './ComposeModal';
-import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useUser } from '../contexts/UserContext';
+import { FaTimes, FaMinus, FaWindowMaximize, FaReply, FaShare } from 'react-icons/fa';
+import api from '../services/api';
 
 export default function ReplyComposer({ onClose, data }) {
   const { showToast } = useToast();
-  const [preloaded, setPreloaded] = useState([]); 
+  const { user } = useUser();
+
+  const [preloaded, setPreloaded] = useState([]);
+  const [minimized, setMinimized] = useState(false);
+  const [wasMinimized, setWasMinimized] = useState(false);
+
+  const isReply = data?.tipo === 'respuesta';
+  const isForward = data?.tipo === 'reenviar';
 
   const handleSend = async ({ to, subject, body, attachments }) => {
     const { success, error } = await api.enviarCorreo({
@@ -28,10 +37,8 @@ export default function ReplyComposer({ onClose, data }) {
     }
   };
 
-  // ✅ Preprocesa los adjuntos si vienen desde el forward
   useEffect(() => {
     if (!data?.attachments?.length) return;
-
     (async () => {
       const files = [];
       for (const a of data.attachments) {
@@ -55,15 +62,56 @@ export default function ReplyComposer({ onClose, data }) {
       r.readAsDataURL(blob);
     });
 
+  const toggleMinimize = () => {
+    if (minimized) {
+      setWasMinimized(true);
+      setTimeout(() => setWasMinimized(false), 500);
+    }
+    setMinimized(m => !m);
+  };
+
+  const avatar = user?.imagen_avatar
+    ? `data:image/jpeg;base64,${user.imagen_avatar}`
+    : 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+
   return (
-    <div className="reply-composer-wrapper">
-      <ComposeModal
-        modo="respuesta"
-        initialData={data}
-        preloadedFiles={preloaded}
-        onSend={handleSend}
-        onClose={onClose}
-      />
+    <div className={`reply-composer-wrapper ${minimized ? 'minimized' : ''}`}>
+      <div className="composer-header">
+        <div className="user-avatar-block">
+          <img src={avatar} alt={user?.nombre || 'avatar'} className="user-avatar" />
+          <div className="reply-icon-wrapper">
+            {isReply && <FaReply className="reply-icon" title="Respuesta" />}
+            {isForward && <FaShare className="reply-icon" title="Reenvío" />}
+          </div>
+        </div>
+        <h3>{data.subject || '(Sin asunto)'}</h3>
+        <div>
+          <button className="icon-btn" onClick={toggleMinimize} title="Minimizar / Restaurar">
+            {minimized ? <FaWindowMaximize /> : <FaMinus />}
+          </button>
+          <button className="icon-btn close-button" onClick={onClose} title="Cerrar">
+            <FaTimes />
+          </button>
+        </div>
+      </div>
+
+      {!minimized && (
+        <>
+          <ComposeModal
+            className={wasMinimized ? 'embedded restore-animation' : 'embedded'}
+            modo="respuesta"
+            initialData={{ ...data, body: '' }} // cuerpo limpio para no duplicar HTML
+            preloadedFiles={preloaded}
+            onSend={handleSend}
+            onClose={onClose}
+          />
+          {data.body && (
+            <div className="original-message-preview scrollable-html">
+              <div dangerouslySetInnerHTML={{ __html: data.body }} />
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
