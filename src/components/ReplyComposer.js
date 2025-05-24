@@ -5,37 +5,54 @@ import { useUser } from '../contexts/UserContext';
 import { FaTimes, FaMinus, FaWindowMaximize, FaReply, FaShare } from 'react-icons/fa';
 import api from '../services/api';
 
-export default function ReplyComposer({ onClose, data }) {
-  const { showToast } = useToast();
-  const { user } = useUser();
+export default function ReplyComposer({ onClose, data, onSuccess  }) {
+    const { showToast } = useToast();
+    const { user } = useUser();
 
-  const [preloaded, setPreloaded] = useState([]);
-  const [minimized, setMinimized] = useState(false);
-  const [wasMinimized, setWasMinimized] = useState(false);
+    const [preloaded, setPreloaded] = useState([]);
+    const [minimized, setMinimized] = useState(false);
+    const [wasMinimized, setWasMinimized] = useState(false);
 
-  const isReply = data?.tipo === 'respuesta';
-  const isForward = data?.tipo === 'reenviar';
+    const isReply = data?.tipo === 'respuesta';
+    const isForward = data?.tipo === 'reenviar';
 
-  const handleSend = async ({ to, subject, body, attachments }) => {
-    const { success, error } = await api.enviarCorreo({
-      to,
-      cc: '',
-      cco: '',
-      subject,
-      html: body,
-      text: body,
-      attachments,
-      tipo: data.tipo,
-      responde_a_id: data.responde_a_id,
-    });
+    const handleSend = async ({ to, subject, body, attachments }) => {
+        const { success, error } = await api.enviarCorreo({
+            to,
+            cc: '',
+            cco: '',
+            subject,
+            html: body,
+            text: body,
+            attachments,
+            tipo: data.tipo,
+            responde_a_id: data.responde_a_id,
+        });
 
-    if (success) {
-      showToast({ message: '📨 Correo enviado', type: 'success' });
-      onClose();
-    } else {
-      showToast({ message: `❌ ${error}`, type: 'error' });
-    }
-  };
+        if (success) {
+            showToast({ message: '📨 Correo enviado', type: 'success' });
+
+            if (typeof onSuccess === 'function') {
+            const now = new Date();
+            onSuccess({
+                id: Math.floor(Math.random() * 1000000), // si no tenés el ID real, podés usar uno temporal
+                subject,
+                body,
+                senderEmail: user.email,
+                senderName: user.nombre,
+                recipients: to,
+                date: now.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }),
+                avatar: user.imagen_avatar ? `data:image/jpeg;base64,${user.imagen_avatar}` : undefined,
+                attachments: [],
+            });
+            }
+
+            onClose();
+        } else {
+            showToast({ message: `❌ ${error}`, type: 'error' });
+        }
+    };
+
 
   useEffect(() => {
     if (!data?.attachments?.length) return;

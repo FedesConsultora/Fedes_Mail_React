@@ -70,13 +70,24 @@ export default function EmailDetail() {
 
     fn(+id)
       .then(data => {
+        console.log('📥 Correo raíz cargado:', data);
+        console.log('📨 Hilo completo recibido:', data.thread);
+
         setRootMail(data);
         const th = Array.isArray(data.thread) && data.thread.length ? data.thread : [data];
         setThread(th);
         setOpenIx(th.length - 1);
       })
-      .catch(() => showToast({ message: '❌ No se pudo cargar el correo', type: 'error' }));
+      .catch(err => {
+        console.error('❌ Error al obtener detalle de correo:', err);
+        showToast({ message: '❌ No se pudo cargar el correo', type: 'error' });
+      });
   }, [id, isSent, isTrash, showToast]);
+
+  useEffect(() => {
+    if (openIx == null || !thread.length) return;
+    console.log('📨 Mensaje actualmente abierto en el hilo:', thread[openIx]);
+  }, [openIx, thread]);
 
   useEffect(() => {
     if (openIx == null || !thread.length) { setEvent(null); return; }
@@ -89,6 +100,11 @@ export default function EmailDetail() {
       catch { setEvent(null); }
     })();
   }, [thread, openIx]);
+
+  const insertarRespuestaEnHilo = nuevoMensaje => {
+    setThread(prev => [...prev, nuevoMensaje]);
+    setOpenIx(prev => prev + 1); // se posiciona en el nuevo mensaje
+  };
 
   const totalMsgs = thread.length;
   const prevMsg = () => setOpenIx(i => (i > 0 ? i - 1 : i));
@@ -311,7 +327,14 @@ export default function EmailDetail() {
         )}
       </div>
       {composeData && (
-        <ReplyComposer data={composeData} onClose={handleCloseComposer} />
+        <ReplyComposer 
+          data={composeData} 
+          onClose={handleCloseComposer}
+          onSuccess={nuevo => {
+            insertarRespuestaEnHilo(nuevo);
+            setComposeData(null);
+          }}  
+        />
       )}
     </div>
   );
