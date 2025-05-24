@@ -237,7 +237,7 @@ export default function EmailDetail() {
   const FullMessage = (m, idx) => (
     <div key={m.id} className="thread-msg">
       <div className="sender-row">
-        <img src="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y" alt="avatar" className="profile-pic" />
+        <img src={m.avatar || 'https://www.gravatar.com/avatar?d=mp'} alt="avatar" className="profile-pic" />
         <div className="sender-info">
           <span className="email-sender">{m.senderEmail}</span>
           <div className="para-line">

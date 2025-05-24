@@ -47,7 +47,7 @@
 
       .reply-icon {
         font-size: 1rem;
-        color: #1a73e8;
+        color: #42718a;
       }
     }
 
@@ -59,8 +59,11 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 60vw;
+      padding-left: 1rem;
     }
-
+    .iconosComposer{
+      display: flex;
+    }
     .icon-btn {
       background: none;
       border: none;
@@ -109,7 +112,7 @@
       }
 
       .to-line span {
-        color: #1a73e8;
+        color: #42718a;
         font-size: 0.82rem;
         font-weight: 500;
         cursor: pointer;
@@ -133,12 +136,12 @@
       border-top: 1px solid #e0e0e0;
 
       .send-btn {
-        background: #1a73e8;
+        background: #42718a;
         box-shadow: 0 1px 0 rgba(60, 64, 67, 0.3);
         transition: background 0.15s;
 
         &:hover {
-          background: #1669c1;
+          background: #295369;
         }
       }
 

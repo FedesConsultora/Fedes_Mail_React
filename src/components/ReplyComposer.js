@@ -85,7 +85,7 @@ export default function ReplyComposer({ onClose, data }) {
           </div>
         </div>
         <h3>{data.subject || '(Sin asunto)'}</h3>
-        <div>
+        <div className='iconosComposer'>
           <button className="icon-btn" onClick={toggleMinimize} title="Minimizar / Restaurar">
             {minimized ? <FaWindowMaximize /> : <FaMinus />}
           </button>

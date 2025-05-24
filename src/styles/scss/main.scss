@@ -23,3 +23,10 @@
   visibility: hidden !important;
   pointer-events: none !important;
 }
+
+@media (max-width: 500px) {
+  .mainContent{
+    padding-left: 0rem;
+    padding-right: 0rem;
+  }
+}
