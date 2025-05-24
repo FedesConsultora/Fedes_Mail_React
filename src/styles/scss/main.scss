@@ -17,13 +17,9 @@
 @import 'ReplyComposer';
 
 
+.o-livechat-root,
 .btn.o-livechat-LivechatButton {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
-
-.o_mail_app_container .toast-container,
-.o_mail_app_container .toast {
-  z-index: 999999 !important;
-  position: fixed !important;
-}
-

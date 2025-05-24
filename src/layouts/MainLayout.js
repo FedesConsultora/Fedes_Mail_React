@@ -16,7 +16,19 @@ const MainLayout = ({ children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (loading || !user) return null; // 🛑 Evitamos flashes mientras carga
+  // 🔥 Eliminamos el chatbot de Odoo LiveChat
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const chatButton = document.querySelector('.btn.o-livechat-LivechatButton');
+      const chatRoot = document.querySelector('.o-livechat-root');
+      if (chatButton) chatButton.remove();
+      if (chatRoot) chatRoot.remove();
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading || !user) return null;
 
   return (
     <div className="layout">
@@ -31,7 +43,7 @@ const MainLayout = ({ children }) => {
           modo="modal"
           onClose={() => setShowCompose(false)}
         />
-      )}  
+      )}
     </div>
   );
 };

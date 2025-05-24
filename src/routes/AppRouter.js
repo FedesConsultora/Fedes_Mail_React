@@ -10,6 +10,7 @@ import Trash from '../pages/Trash';
 import Spam from '../pages/Spam';
 
 export default function AppRouter() {
+  
   return (
     <BrowserRouter basename="/FedesMail">
       <Routes>
