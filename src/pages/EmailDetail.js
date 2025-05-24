@@ -139,10 +139,14 @@ export default function EmailDetail () {
 
     try {
       const srv = isSent
-        ? api.prepareReplySent
+      ? api.prepareReplySent
+      : isTrash
+        ? api.prepareReplyTrash
         : api.prepareReply;
 
-      const base = isSent
+    const base = isSent
+      ? await srv(currentMail.id)
+      : isTrash
         ? await srv(currentMail.id)
         : await srv(currentMail.id, user.email);
 
@@ -178,12 +182,16 @@ export default function EmailDetail () {
 
     try {
       const srv = isSent
-        ? api.prepareForwardSent
+      ? api.prepareForwardSent
+      : isTrash
+        ? api.prepareForwardTrash
         : api.prepareForward;
 
       const base = isSent
+      ? await srv(currentMail.id)
+      : isTrash
         ? await srv(currentMail.id)
-        : await srv(currentMail.id, user.email);
+        : await srv(currentMail.id, user.email);  
 
       console.log('✅ [Forward] Reenvío base:', base);
 

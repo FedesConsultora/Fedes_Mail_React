@@ -252,6 +252,21 @@ const api = {
     const { emails = [], total = 0 } = await ensure(res);
     return { emails, total };
   },
+
+  async forzarActualizacionInbox() {
+    const res = await fetch(`${apiBase}/forzar_actualizacion_inbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({}),
+    });
+
+    const data = await toJson(res);
+    return data?.status === 'ok'
+      ? ok()
+      : { success: false, error: data?.mensaje || 'Error al forzar actualización' };
+  },
+  
   async prepareReply(mailId, email) {
     const res = await fetch(`${apiBase}/prepare_reply`, {
       method: 'POST',
@@ -271,19 +286,7 @@ const api = {
     });
     return await ensure(res);
   },
-  async forzarActualizacionInbox() {
-    const res = await fetch(`${apiBase}/forzar_actualizacion_inbox`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials,
-      body: JSON.stringify({}),
-    });
 
-    const data = await toJson(res);
-    return data?.status === 'ok'
-      ? ok()
-      : { success: false, error: data?.mensaje || 'Error al forzar actualización' };
-  },
   async prepareReplySent(mailId) {
     const res = await fetch(`${apiBase}/prepare_reply_sent`, {
       method: 'POST',
@@ -303,6 +306,27 @@ const api = {
     });
     return await ensure(res);
   },
+
+  async prepareReplyTrash(mailId) {
+    const res = await fetch(`${apiBase}/prepare_reply_trash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
+
+  async prepareForwardTrash(mailId) {
+    const res = await fetch(`${apiBase}/prepare_forward_trash`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({ mail_id: mailId }),
+    });
+    return await ensure(res);
+  },
+
 };
 
 export default api;
