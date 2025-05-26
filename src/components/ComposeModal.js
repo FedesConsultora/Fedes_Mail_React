@@ -1,4 +1,17 @@
-// ... (importaciones iguales)
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  FaTimes, FaWindowMinimize, FaExpand, FaCompress,
+  FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt, FaPenFancy
+} from 'react-icons/fa';
+import { IoMdHappy } from 'react-icons/io';
+import Picker from '@emoji-mart/react';
+import data from '@emoji-mart/data';
+import api from '../services/api';
+import { useToast } from '../contexts/ToastContext';
+import { useUser } from '../contexts/UserContext';
+
+const MAX_MB = 25;
+const MAX_B = MAX_MB * 1024 * 1024;
 
 export default function ComposeModal({
   onClose,
@@ -43,7 +56,7 @@ export default function ComposeModal({
         cc: initialData.cc || '',
         cco: initialData.cco || '',
         subject: initialData.subject || '',
-        body: initialData.body || '',
+        body: '',
       });
       setShowCc(!!initialData.cc);
       setShowCco(!!initialData.cco);

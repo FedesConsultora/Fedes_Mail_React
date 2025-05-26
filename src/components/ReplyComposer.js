@@ -133,19 +133,7 @@ export default function ReplyComposer({ onClose, data, onSuccess }) {
             setMostrarFirma={setMostrarFirma}
           />
 
-          {/* Firma renderizada (toggleable) */}
-          {user?.firma_html && mostrarFirma && (
-            <div
-              className="firma-render"
-              dangerouslySetInnerHTML={{ __html: user.firma_html }}
-              style={{
-                margin: '1rem 1.5rem',
-                paddingTop: '0.75rem',
-                borderTop: '1px dashed #ccc',
-                fontSize: '0.85rem',
-              }}
-            />
-          )}
+          
 
           {data.body && (
             <div className="original-message-preview scrollable-html">

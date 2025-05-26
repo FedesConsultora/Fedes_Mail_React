@@ -21,19 +21,26 @@ const iconByMime = m => (m?.startsWith('image/') ? <FaPaperclip /> : <FaFileAlt 
 /* ——— parser ICS mínimo ——— */
 async function fetchAndParseICS(url) {
   const txt = await fetch(url).then(r => r.text());
-  const g = k => (txt.match(new RegExp(`${k}:(.+)`)) || [, ''])[1].trim();
-  const dt = v => {
-    const m = v.replace('Z', '').match(/(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})?/);
+
+  const getVal = (k) => {
+    const match = txt.match(new RegExp(`${k}(;[^:]*)?:([^\r\n]+)`));
+    return match ? match[2].trim() : '';
+  };
+
+  const parseDate = (v) => {
+    if (!v) return null;
+    const m = v.match(/(\d{4})(\d{2})(\d{2})T?(\d{2})(\d{2})(\d{2})?/);
     if (!m) return null;
     const [, Y, M, D, h, mi, s = '00'] = m;
     return `${Y}-${M}-${D}T${h}:${mi}:${s}`;
   };
+
   return {
-    title: g('SUMMARY') || '(Sin título)',
-    location: g('LOCATION') || '',
-    url: g('URL') || '',
-    start: dt(g('DTSTART')),
-    end: dt(g('DTEND')),
+    title: getVal('SUMMARY') || '(Sin título)',
+    location: getVal('LOCATION') || '',
+    url: getVal('URL') || '',
+    start: parseDate(getVal('DTSTART')),
+    end: parseDate(getVal('DTEND')),
     status: /STATUS:CANCELLED/.test(txt) ? 'cancelled' : ''
   };
 }
@@ -230,7 +237,7 @@ export default function EmailDetail() {
       <h4>Archivos adjuntos</h4>
       <div className="attachments-list">
         {list.map((att, i) => (
-          <a key={i} className="attachment-item" href={att.preview} download={att.name} target="_blank" rel="noopener noreferrer">
+          <a key={i} className="attachment-item" href={att.preview} download={att.name} rel="noopener noreferrer">
             <div className="attachment-icon">{iconByMime(att.mimetype)}</div>
             <div className="attachment-info">
               <span className="attachment-name">{att.name}</span>
