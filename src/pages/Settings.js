@@ -3,14 +3,13 @@ import Loader from '../components/Loader';
 import FirmaForm from '../components/FirmaForm';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
-import api from '../services/api'; // asegurate de tener el método regenerarFirma en api.js
+import api from '../services/api';
 
 export default function Settings() {
   const { user, loading } = useUser();
   const { showToast } = useToast();
   const [tab, setTab] = useState('firma');
   const [data, setData] = useState(null);
-  const [cargandoFirma, setCargandoFirma] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -38,30 +37,21 @@ export default function Settings() {
       });
 
       await api.actualizarFirma({ firma_html: data.firma_html });
+
       const nuevoUsuario = await api.obtenerUsuarioActual();
-      setData({
-        firma_html: nuevoUsuario.firma_html || '',
-        nombre_completo: nuevoUsuario.nombre_completo || '',
-        puesto: nuevoUsuario.puesto || '',
-        equipo_trabajo: nuevoUsuario.equipo_trabajo || '',
-        telefono_personal: nuevoUsuario.telefono_personal || ''
-      });
+
+      setData(prev => ({
+        ...prev,
+        firma_html: nuevoUsuario.firma_html ?? prev.firma_html,
+        nombre_completo: nuevoUsuario.nombre_completo ?? prev.nombre_completo,
+        puesto: nuevoUsuario.puesto ?? prev.puesto,
+        equipo_trabajo: nuevoUsuario.equipo_trabajo ?? prev.equipo_trabajo,
+        telefono_personal: nuevoUsuario.telefono_personal ?? prev.telefono_personal,
+      }));
+
       showToast({ message: '✅ Cambios guardados correctamente.', type: 'success' });
     } catch (err) {
       showToast({ message: '❌ Error al guardar cambios.', type: 'error' });
-    }
-  };
-
-  const regenerarFirma = async () => {
-    setCargandoFirma(true);
-    try {
-      const res = await api.regenerarFirma();
-      setData(prev => ({ ...prev, firma_html: res.firma_html || '' }));
-      showToast({ message: '✅ Firma HTML actualizada.', type: 'success' });
-    } catch (err) {
-      showToast({ message: '❌ Error al regenerar firma.', type: 'error' });
-    } finally {
-      setCargandoFirma(false);
     }
   };
 
@@ -83,8 +73,6 @@ export default function Settings() {
             data={data}
             onChange={handleChange}
             onSave={guardarCambios}
-            regenerarFirma={regenerarFirma}
-            cargandoFirma={cargandoFirma}
           />
         )}
       </div>

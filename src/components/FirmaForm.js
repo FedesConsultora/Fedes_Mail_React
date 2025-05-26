@@ -1,4 +1,4 @@
-export default function FirmaForm({ data, onChange, onSave, mensaje, regenerarFirma, cargandoFirma }) {
+export default function FirmaForm({ data, onChange, onSave, mensaje, cargandoFirma }) {
   return (
     <div className="firma-form">
       <div className="form-group">
@@ -22,9 +22,8 @@ export default function FirmaForm({ data, onChange, onSave, mensaje, regenerarFi
       </div>
 
       <div className="btn-group">
-        <button className="guardar-btn" onClick={onSave}>💾 Guardar cambios</button>
-        <button className="regenerar-btn" onClick={regenerarFirma} disabled={cargandoFirma}>
-          🔁 Actualizar firma HTML
+        <button className="guardar-btn" onClick={onSave}>
+          💾 Guardar cambios
         </button>
         {cargandoFirma && <span>Generando…</span>}
       </div>
