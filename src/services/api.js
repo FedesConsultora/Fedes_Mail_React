@@ -9,10 +9,14 @@ const cleanIds = ids => (Array.isArray(ids) ? ids.filter(Boolean).map(Number) : 
    Config dinámico
 -------------------------------------------------------- */
 const getApiConfig = () => {
-  const ORIGIN = window.location.origin;
-  return ORIGIN.includes('localhost')
-    ? { apiBase: '/api',           credentials: 'omit',    mock: true  }
-    : { apiBase: '/FedesMail/api', credentials: 'include', mock: false };
+  const PATH = window.location.pathname;
+  const isLocal = window.location.hostname === 'localhost';
+
+  return isLocal
+    ? { apiBase: '/api', credentials: 'omit', mock: true }
+    : PATH.startsWith('/FedesMail')
+      ? { apiBase: '/FedesMail/api', credentials: 'include', mock: false }
+      : { apiBase: '/api', credentials: 'include', mock: false }; // fallback o default
 };
 
 const { apiBase, credentials, mock } = getApiConfig();
