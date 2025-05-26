@@ -139,7 +139,6 @@ export default function Inbox() {
     setMails((curr) => curr.filter((m) => m.id !== id));
     setSelectedIds((prev) => prev.filter((i) => i !== id));
     setTotalMails((prev) => Math.max(prev - 1, 0));
-    showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
   };
 
   const eliminarSeleccionados = async () => {

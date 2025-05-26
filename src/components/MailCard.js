@@ -92,7 +92,6 @@ export default function MailCard({
     }
     await api.deleteMails({ folder:currentFolder==='starred'?'inbox':currentFolder, mail_ids:[mail.id] });
     onDeleteMail(mail.id);
-    showToast({message:'🗑️ Correo a papelera', type:'warning'});
   }
   const spam = async e => { e.stopPropagation(); await api.marcarComoSpam([mail.id]); onDeleteMail(mail.id); showToast({message:'🚫 Movido a Spam', type:'warning'}); };
   const noSpam = async e => { e.stopPropagation(); showConfirmToast({ message:'¿Sacar de Spam?', type:'warning', confirmText:'Mover', onConfirm:async()=>{ await api.marcarComoNoSpam([mail.id]); onDeleteMail(mail.id); showToast({message:'📥 Recuperado', type:'success'});} }); };

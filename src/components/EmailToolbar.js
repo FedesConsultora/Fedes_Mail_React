@@ -32,24 +32,25 @@ export default function EmailToolbar({
         : 'inbox';
 
   /* -------- eliminar definitivamente / mover a papelera -------- */
-  const handleDelete = () => {
-    showConfirmToast({
-      message     : '¿Eliminar este correo permanentemente?',
-      type        : 'warning',
-      confirmText : 'Eliminar',
-      cancelText  : 'Cancelar',
-      onConfirm   : async () => {
-        try {
-          await api.deleteMails({ folder: currentFolder, mail_ids: [mailId] });
-          showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
-          navigate(`/${currentFolder}`);
-        } catch (err) {
-          console.error(err);
-          showToast({ message: '❌ No se pudo eliminar', type: 'error' });
+    const handleDelete = () => {
+      showConfirmToast({
+        message     : '¿Eliminar este correo permanentemente?',
+        type        : 'warning',
+        confirmText : 'Eliminar',
+        cancelText  : 'Cancelar',
+        onConfirm   : async () => {
+          try {
+            await api.deleteMails({ folder: currentFolder, mail_ids: [mailId] });
+            showToast({ message: '🗑️ Correo eliminado', type: 'warning' });
+            navigate(`/${currentFolder}`);
+          } catch (err) {
+            console.error(err);
+            showToast({ message: '❌ No se pudo eliminar', type: 'error' });
+          }
         }
-      }
-    });
-  };
+      });
+    };
+
 
   /* ---------------------------------------------------------------- */
   return (
