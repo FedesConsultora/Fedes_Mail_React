@@ -8,6 +8,7 @@ import Sent from '../pages/Sent';
 import Starred from '../pages/Starred';
 import Trash from '../pages/Trash';
 import Spam from '../pages/Spam';
+import Settings from '../pages/Settings';
 
 export default function AppRouter() {
   
@@ -55,7 +56,14 @@ export default function AppRouter() {
             </MainLayout>
           }
         />
-
+        <Route
+          path="/settings"
+          element={
+            <MainLayout>
+              <Settings />
+            </MainLayout>
+          }
+        />
         <Route
           path="/sent/email/:id"
           element={

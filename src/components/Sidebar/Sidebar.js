@@ -52,13 +52,16 @@ function Sidebar({ isCollapsed, onComposeClick  }) {
                 <FaTrash /> {!isCollapsed && <span>Papelera</span>}
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/settings" className={({ isActive }) => isActive ? 'active' : ''}>
+                <FaCog /> {!isCollapsed && <span>Configuraciones</span>}
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </div>
 
-      <div className="config">
-        <FaCog /> {!isCollapsed && <span>Configuraciones</span>}
-      </div>
+      
     </aside>
   );
 }
