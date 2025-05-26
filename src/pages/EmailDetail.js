@@ -266,6 +266,13 @@ export default function EmailDetail() {
             <div className="mail-details-dropdown">
               <p><b>De:</b> {m.senderName} &lt;{m.senderEmail}&gt;</p>
               <p><b>Para:</b> {m.recipients}</p>
+              {m.cc && (
+                <p><b>CC:</b> {m.cc}</p>
+              )}
+              {/* El CCO solo se muestra si el usuario actual es el remitente */}
+              {m.cco && m.senderEmail === user.email && (
+                <p><b>CCO:</b> {m.cco}</p>
+              )}
               <p><b>Fecha:</b> {m.date}</p>
               <p><b>Seguridad:</b> {m.security}</p>
             </div>

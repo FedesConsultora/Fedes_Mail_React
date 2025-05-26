@@ -45,11 +45,13 @@ export default function ComposeModal({
     if (!hasInitialized.current) {
       setForm({
         to: initialData.to || '',
-        cc: '',
-        cco: '',
+        cc: initialData.cc || '',
+        cco: initialData.cco || '',
         subject: initialData.subject || '',
         body: '' // inicialmente vacío
       });
+      setShowCc(!!initialData.cc);
+      setShowCco(!!initialData.cco);
       setFiles([]);
       hasInitialized.current = true;
     }

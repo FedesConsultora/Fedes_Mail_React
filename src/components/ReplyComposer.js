@@ -16,17 +16,17 @@ export default function ReplyComposer({ onClose, data, onSuccess  }) {
     const isReply = data?.tipo === 'respuesta';
     const isForward = data?.tipo === 'reenviar';
 
-    const handleSend = async ({ to, subject, body, attachments }) => {
+    const handleSend = async ({ to, cc, cco, subject, body, attachments }) => {
         const { success, error } = await api.enviarCorreo({
-            to,
-            cc: '',
-            cco: '',
-            subject,
-            html: body,
-            text: body,
-            attachments,
-            tipo: data.tipo,
-            responde_a_id: data.responde_a_id,
+          to,
+          cc,
+          cco,
+          subject,
+          html: body,
+          text: body,
+          attachments,
+          tipo: data.tipo,
+          responde_a_id: data.responde_a_id,
         });
 
         if (success) {
