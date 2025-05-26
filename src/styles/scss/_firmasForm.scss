@@ -1,0 +1,71 @@
+.firma-form {
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 0.95rem;
+      background: #fff;
+
+      &:focus {
+        border-color: #42718a;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(#42718a, 0.2);
+      }
+    }
+
+    textarea {
+      font-family: monospace;
+      resize: vertical;
+      min-height: 120px;
+    }
+  }
+
+  .guardar-btn {
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background: #42718a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover {
+      background: darken(#42718a, 8%);
+    }
+  }
+
+  .mensaje {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    color: #444;
+  }
+
+  .firma-preview {
+    margin-top: 2rem;
+
+    .preview-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+
+    .preview-box {
+      padding: 1rem;
+      background: #f8f9fa;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+    }
+  }
+}

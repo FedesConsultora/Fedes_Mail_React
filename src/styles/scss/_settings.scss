@@ -87,3 +87,83 @@
     }
   }
 }
+
+
+.settings-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  button {
+    background: none;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+
+    &.active {
+      border-color: #42718a;
+      color: #42718a;
+    }
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
+.settings-content {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+
+  .form-group {
+    margin-bottom: 1rem;
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+  }
+
+  .guardar-btn {
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    background: #42718a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .mensaje {
+    margin-top: 1rem;
+  }
+
+  .firma-preview {
+    margin-top: 2rem;
+
+    .preview-label {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .preview-box {
+      padding: 1rem;
+      border: 1px dashed #ccc;
+      background: #f9f9f9;
+    }
+  }
+}
+
