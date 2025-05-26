@@ -186,15 +186,7 @@
       }
     }
 
-    .firma-preview-html {
-      padding: 0 1.5rem 1rem;
-      font-size: 0.85rem;
-      color: #444;
-
-      * {
-        max-width: 100%;
-      }
-    }
+    
 
     .attachments-preview {
       background: #fafafa;
@@ -274,7 +266,15 @@
     }
   }
 }
+.firma-preview-html {
+  padding: 1rem !important;
+  font-size: 0.85rem;
+  color: #444;
 
+  * {
+    max-width: 100%;
+  }
+}
 @keyframes slideIn {
   from {
     opacity: 0;

@@ -278,15 +278,15 @@
 }
 
 .compose-modal.fullscreen {
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  max-height: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80vw !important;
+  height: 80vh !important;
   max-width: none;
-  border-radius: 0;
+  max-height: none;
+  border-radius: 12px;
   z-index: 3000;
   padding-bottom: 3rem;
 }
@@ -308,7 +308,7 @@
   background: white;
   border: 1px solid #ccc;
   border-radius: 24px;
-  padding: 0.3rem 1rem;
+  padding: 0.4rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -316,7 +316,13 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   font-size: 0.9rem;
   z-index: 1500;
-
+  cursor: pointer;
+  .actions{
+    display: flex;
+    svg{
+      margin-right: 0.7rem;
+    }
+  }
   span {
     font-weight: 500;
   }

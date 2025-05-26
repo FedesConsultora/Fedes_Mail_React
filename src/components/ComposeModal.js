@@ -1,17 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  FaTimes, FaWindowMinimize, FaExpand, FaCompress,
-  FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt, FaPenFancy
-} from 'react-icons/fa';
-import { IoMdHappy } from 'react-icons/io';
-import Picker from '@emoji-mart/react';
-import data from '@emoji-mart/data';
-import api from '../services/api';
-import { useToast } from '../contexts/ToastContext';
-import { useUser } from '../contexts/UserContext';
-
-const MAX_MB = 25;
-const MAX_B = MAX_MB * 1024 * 1024;
+// ... (importaciones iguales)
 
 export default function ComposeModal({
   onClose,
@@ -19,6 +6,8 @@ export default function ComposeModal({
   modo = 'modal',
   onSend = null,
   preloadedFiles = [],
+  mostrarFirma,              // ✅ NUEVO
+  setMostrarFirma            // ✅ NUEVO
 }) {
   const hasInitialized = useRef(false);
   const { showToast } = useToast();
@@ -26,11 +15,7 @@ export default function ComposeModal({
   const textareaRef = useRef();
 
   const [form, setForm] = useState({
-    to: '',
-    cc: '',
-    cco: '',
-    subject: '',
-    body: '',
+    to: '', cc: '', cco: '', subject: '', body: ''
   });
 
   const [showCc, setShowCc] = useState(false);
@@ -38,12 +23,16 @@ export default function ComposeModal({
   const [files, setFiles] = useState([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
-  const [firmaVisible, setFirmaVisible] = useState(() => localStorage.getItem('firma_activa') !== 'false');
+  const [firmaVisible, setFirmaVisible] = useState(() =>
+    localStorage.getItem('firma_activa') !== 'false'
+  );
   const [fullscreen, setFullscreen] = useState(false);
   const [minimized, setMinimized] = useState(false);
 
   const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
   const isReply = modo === 'respuesta';
+
+  const visibleFirma = typeof mostrarFirma === 'boolean' ? mostrarFirma : firmaVisible;
 
   const change = e => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -122,7 +111,7 @@ export default function ComposeModal({
       cc: form.cc,
       cco: form.cco,
       subject: form.subject,
-      html: form.body + (firmaVisible && user?.firma_html ? `<br/><br/>${user.firma_html}` : ''),
+      html: form.body + (!mostrarFirma && firmaVisible && user?.firma_html ? `<br/><br/>${user.firma_html}` : ''),
       text: form.body,
       attachments,
       tipo: 'nuevo'
@@ -149,9 +138,13 @@ export default function ComposeModal({
   };
 
   const toggleFirma = () => {
-    const nuevoValor = !firmaVisible;
+    const nuevoValor = !visibleFirma;
     setFirmaVisible(nuevoValor);
-    localStorage.setItem('firma_activa', nuevoValor);
+    if (typeof setMostrarFirma === 'function') {
+      setMostrarFirma(nuevoValor);
+    } else {
+      localStorage.setItem('firma_activa', nuevoValor);
+    }
   };
 
   const toggleFullscreen = () => {
@@ -168,8 +161,14 @@ export default function ComposeModal({
     return (
       <div className="compose-tab-minimized">
         <span>Nuevo mensaje</span>
-        <div>
-          <FaExpand title="Expandir" onClick={toggleFullscreen} />
+        <div className="actions">
+          <FaExpand
+            title="Restaurar"
+            onClick={() => {
+              setMinimized(false);
+              setFullscreen(false);
+            }}
+          />
           <FaTimes onClick={onClose} title="Cerrar" />
         </div>
       </div>
@@ -177,110 +176,107 @@ export default function ComposeModal({
   }
 
   return (
-
-    <> 
-        <div
-          className={`compose-modal ${isReply ? 'embedded' : ''} ${fullscreen ? 'fullscreen' : ''}`}
-          onDragOver={prevent}
-          onDrop={onDrop}
-        >
-          {!isReply && (
-            <div className="header">
-              <span>Mensaje nuevo</span>
-              <div className="header-actions">
-                <FaWindowMinimize onClick={toggleMinimize} title="Minimizar" />
-                {fullscreen
-                  ? <FaCompress title="Restaurar" onClick={toggleFullscreen} />
-                  : <FaExpand title="Expandir" onClick={toggleFullscreen} />}
-                <FaTimes onClick={onClose} title="Cerrar" />
-              </div>
-            </div>
-          )}
-
-          <div className="fields">
-            <div className="to-line">
-              <input name="to" placeholder="Para" value={form.to} onChange={change} />
-              <span onClick={() => setShowCc(!showCc)}>CC</span>
-              <span onClick={() => setShowCco(!showCco)}>CCO</span>
-            </div>
-            {showCc && <input name="cc" placeholder="CC" value={form.cc} onChange={change} />}
-            {showCco && <input name="cco" placeholder="CCO" value={form.cco} onChange={change} />}
-            <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
-          </div>
-
-          <textarea
-            ref={textareaRef}
-            name="body"
-            placeholder="Escribí tu mensaje…"
-            value={form.body}
-            onChange={change}
-          />
-
-          {firmaVisible && user?.firma_html && (
-            <div
-              className="firma-preview-html"
-              dangerouslySetInnerHTML={{ __html: user.firma_html }}
-            />
-          )}
-
-          {files.length > 0 && (
-            <div className="attachments-preview">
-              {files.map(({ file, url }, i) => (
-                <div key={i} className="att-chip">
-                  {file.type.startsWith('image/')
-                    ? <FaFileImage />
-                    : file.type === 'application/pdf'
-                      ? <FaFilePdf />
-                      : <FaFileAlt />}
-                  <a href={url} download={file.name} className="filename">{file.name}</a>
-                  <span className="size">({(file.size / 1024).toFixed(0)} KB)</span>
-                  <FaTimes className="rm-btn" onClick={() => setFiles(f => f.filter((_, idx) => idx !== i))} />
-                </div>
-              ))}
-              <div className="total">
-                Usado {(totalSize / 1024 / 1024).toFixed(1)} MB / {MAX_MB} MB
-              </div>
-            </div>
-          )}
-
-          <div className="footer">
-            <button
-              className="send-btn"
-              disabled={sending || totalSize > MAX_B}
-              onClick={doSend}
-            >
-              {sending ? 'Enviando…' : 'Enviar'}
-            </button>
-
-            <div className="footer-icons">
-              <label className="icon-btn">
-                <FaPaperclip title="Adjuntar archivo" />
-                <input
-                  type="file"
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={e => processFiles(Array.from(e.target.files))}
-                />
-              </label>
-              <FaPenFancy
-                title={firmaVisible ? 'Quitar firma' : 'Agregar firma'}
-                className={`icon-btn firma-toggle ${firmaVisible ? 'active' : ''}`}
-                onClick={toggleFirma}
-              />
-              <IoMdHappy title="Emoji" onClick={() => setShowEmoji(!showEmoji)} />
+    <>
+      <div
+        className={`compose-modal ${isReply ? 'embedded' : ''} ${fullscreen ? 'fullscreen' : ''}`}
+        onDragOver={prevent}
+        onDrop={onDrop}
+      >
+        {!isReply && (
+          <div className="header">
+            <span>Mensaje nuevo</span>
+            <div className="header-actions">
+              <FaWindowMinimize onClick={toggleMinimize} title="Minimizar" />
+              {fullscreen
+                ? <FaCompress title="Restaurar" onClick={toggleFullscreen} />
+                : <FaExpand title="Expandir" onClick={toggleFullscreen} />}
+              <FaTimes onClick={onClose} title="Cerrar" />
             </div>
           </div>
+        )}
 
-          {showEmoji && (
-            <div className="emoji-popover">
-              <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
-            </div>
-          )}
-
-          
+        <div className="fields">
+          <div className="to-line">
+            <input name="to" placeholder="Para" value={form.to} onChange={change} />
+            <span onClick={() => setShowCc(!showCc)}>CC</span>
+            <span onClick={() => setShowCco(!showCco)}>CCO</span>
+          </div>
+          {showCc && <input name="cc" placeholder="CC" value={form.cc} onChange={change} />}
+          {showCco && <input name="cco" placeholder="CCO" value={form.cco} onChange={change} />}
+          <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
         </div>
-        {fullscreen && <div className="compose-overlay" onClick={toggleFullscreen} />}
-    </>
 
+        <textarea
+          ref={textareaRef}
+          name="body"
+          placeholder="Escribí tu mensaje…"
+          value={form.body}
+          onChange={change}
+        />
+
+        {visibleFirma && user?.firma_html && (
+          <div
+            className="firma-preview-html"
+            dangerouslySetInnerHTML={{ __html: user.firma_html }}
+          />
+        )}
+
+        {files.length > 0 && (
+          <div className="attachments-preview">
+            {files.map(({ file, url }, i) => (
+              <div key={i} className="att-chip">
+                {file.type.startsWith('image/')
+                  ? <FaFileImage />
+                  : file.type === 'application/pdf'
+                    ? <FaFilePdf />
+                    : <FaFileAlt />}
+                <a href={url} download={file.name} className="filename">{file.name}</a>
+                <span className="size">({(file.size / 1024).toFixed(0)} KB)</span>
+                <FaTimes className="rm-btn" onClick={() => setFiles(f => f.filter((_, idx) => idx !== i))} />
+              </div>
+            ))}
+            <div className="total">
+              Usado {(totalSize / 1024 / 1024).toFixed(1)} MB / {MAX_MB} MB
+            </div>
+          </div>
+        )}
+
+        <div className="footer">
+          <button
+            className="send-btn"
+            disabled={sending || totalSize > MAX_B}
+            onClick={doSend}
+          >
+            {sending ? 'Enviando…' : 'Enviar'}
+          </button>
+
+          <div className="footer-icons">
+            <label className="icon-btn">
+              <FaPaperclip title="Adjuntar archivo" />
+              <input
+                type="file"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => processFiles(Array.from(e.target.files))}
+              />
+            </label>
+            <FaPenFancy
+              title={visibleFirma ? 'Quitar firma' : 'Agregar firma'}
+              className={`icon-btn firma-toggle ${visibleFirma ? 'active' : ''}`}
+              onClick={toggleFirma}
+            />
+            <IoMdHappy title="Emoji" onClick={() => setShowEmoji(!showEmoji)} />
+          </div>
+        </div>
+
+        {showEmoji && (
+          <div className="emoji-popover">
+            <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
+          </div>
+        )}
+      </div>
+
+      {fullscreen && <div className="compose-overlay" onClick={toggleFullscreen} />}
+    </>
   );
 }
