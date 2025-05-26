@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   FaTimes, FaWindowMinimize, FaExpand, FaCompress,
-  FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt
+  FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt, FaPenFancy
 } from 'react-icons/fa';
 import { IoMdHappy } from 'react-icons/io';
 import Picker from '@emoji-mart/react';
@@ -177,111 +177,110 @@ export default function ComposeModal({
   }
 
   return (
-    <div
-      className={`compose-modal ${isReply ? 'embedded' : ''} ${fullscreen ? 'fullscreen' : ''}`}
-      onDragOver={prevent}
-      onDrop={onDrop}
-    >
-      {!isReply && (
-        <div className="header">
-          <span>Mensaje nuevo</span>
-          <div className="header-actions">
-            <FaWindowMinimize onClick={toggleMinimize} title="Minimizar" />
-            {fullscreen
-              ? <FaCompress title="Restaurar" onClick={toggleFullscreen} />
-              : <FaExpand title="Expandir" onClick={toggleFullscreen} />}
-            <FaTimes onClick={onClose} title="Cerrar" />
-          </div>
-        </div>
-      )}
 
-      <div className="fields">
-        <div className="to-line">
-          <input name="to" placeholder="Para" value={form.to} onChange={change} />
-          <span onClick={() => setShowCc(!showCc)}>CC</span>
-          <span onClick={() => setShowCco(!showCco)}>CCO</span>
-        </div>
-        {showCc && <input name="cc" placeholder="CC" value={form.cc} onChange={change} />}
-        {showCco && <input name="cco" placeholder="CCO" value={form.cco} onChange={change} />}
-        <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
-      </div>
-
-      <textarea
-        ref={textareaRef}
-        name="body"
-        placeholder="Escribí tu mensaje…"
-        value={form.body}
-        onChange={change}
-      />
-
-      <div className="firma-html-toggle">
-        <button
-          type="button"
-          className={`firma-icon-btn ${firmaVisible ? 'active' : ''}`}
-          onClick={toggleFirma}
-          title={firmaVisible ? 'Quitar firma' : 'Agregar firma'}
-        >
-          ✒️
-        </button>
-      </div>
-
-      {firmaVisible && user?.firma_html && (
+    <> 
         <div
-          className="firma-preview-html"
-          dangerouslySetInnerHTML={{ __html: user.firma_html }}
-        />
-      )}
-
-      {files.length > 0 && (
-        <div className="attachments-preview">
-          {files.map(({ file, url }, i) => (
-            <div key={i} className="att-chip">
-              {file.type.startsWith('image/')
-                ? <FaFileImage />
-                : file.type === 'application/pdf'
-                  ? <FaFilePdf />
-                  : <FaFileAlt />}
-              <a href={url} download={file.name} className="filename">{file.name}</a>
-              <span className="size">({(file.size / 1024).toFixed(0)} KB)</span>
-              <FaTimes className="rm-btn" onClick={() => setFiles(f => f.filter((_, idx) => idx !== i))} />
-            </div>
-          ))}
-          <div className="total">
-            Usado {(totalSize / 1024 / 1024).toFixed(1)} MB / {MAX_MB} MB
-          </div>
-        </div>
-      )}
-
-      <div className="footer">
-        <button
-          className="send-btn"
-          disabled={sending || totalSize > MAX_B}
-          onClick={doSend}
+          className={`compose-modal ${isReply ? 'embedded' : ''} ${fullscreen ? 'fullscreen' : ''}`}
+          onDragOver={prevent}
+          onDrop={onDrop}
         >
-          {sending ? 'Enviando…' : 'Enviar'}
-        </button>
+          {!isReply && (
+            <div className="header">
+              <span>Mensaje nuevo</span>
+              <div className="header-actions">
+                <FaWindowMinimize onClick={toggleMinimize} title="Minimizar" />
+                {fullscreen
+                  ? <FaCompress title="Restaurar" onClick={toggleFullscreen} />
+                  : <FaExpand title="Expandir" onClick={toggleFullscreen} />}
+                <FaTimes onClick={onClose} title="Cerrar" />
+              </div>
+            </div>
+          )}
 
-        <div className="footer-icons">
-          <label className="icon-btn">
-            <FaPaperclip title="Adjuntar archivo" />
-            <input
-              type="file"
-              multiple
-              style={{ display: 'none' }}
-              onChange={e => processFiles(Array.from(e.target.files))}
+          <div className="fields">
+            <div className="to-line">
+              <input name="to" placeholder="Para" value={form.to} onChange={change} />
+              <span onClick={() => setShowCc(!showCc)}>CC</span>
+              <span onClick={() => setShowCco(!showCco)}>CCO</span>
+            </div>
+            {showCc && <input name="cc" placeholder="CC" value={form.cc} onChange={change} />}
+            {showCco && <input name="cco" placeholder="CCO" value={form.cco} onChange={change} />}
+            <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
+          </div>
+
+          <textarea
+            ref={textareaRef}
+            name="body"
+            placeholder="Escribí tu mensaje…"
+            value={form.body}
+            onChange={change}
+          />
+
+          {firmaVisible && user?.firma_html && (
+            <div
+              className="firma-preview-html"
+              dangerouslySetInnerHTML={{ __html: user.firma_html }}
             />
-          </label>
-          <IoMdHappy title="Emoji" onClick={() => setShowEmoji(!showEmoji)} />
-        </div>
-      </div>
+          )}
 
-      {showEmoji && (
-        <div className="emoji-popover">
-          <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
-        </div>
-      )}
+          {files.length > 0 && (
+            <div className="attachments-preview">
+              {files.map(({ file, url }, i) => (
+                <div key={i} className="att-chip">
+                  {file.type.startsWith('image/')
+                    ? <FaFileImage />
+                    : file.type === 'application/pdf'
+                      ? <FaFilePdf />
+                      : <FaFileAlt />}
+                  <a href={url} download={file.name} className="filename">{file.name}</a>
+                  <span className="size">({(file.size / 1024).toFixed(0)} KB)</span>
+                  <FaTimes className="rm-btn" onClick={() => setFiles(f => f.filter((_, idx) => idx !== i))} />
+                </div>
+              ))}
+              <div className="total">
+                Usado {(totalSize / 1024 / 1024).toFixed(1)} MB / {MAX_MB} MB
+              </div>
+            </div>
+          )}
 
-      {fullscreen && <div className="compose-overlay" onClick={toggleFullscreen} />}
-    </div>
+          <div className="footer">
+            <button
+              className="send-btn"
+              disabled={sending || totalSize > MAX_B}
+              onClick={doSend}
+            >
+              {sending ? 'Enviando…' : 'Enviar'}
+            </button>
+
+            <div className="footer-icons">
+              <label className="icon-btn">
+                <FaPaperclip title="Adjuntar archivo" />
+                <input
+                  type="file"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={e => processFiles(Array.from(e.target.files))}
+                />
+              </label>
+              <FaPenFancy
+                title={firmaVisible ? 'Quitar firma' : 'Agregar firma'}
+                className={`icon-btn firma-toggle ${firmaVisible ? 'active' : ''}`}
+                onClick={toggleFirma}
+              />
+              <IoMdHappy title="Emoji" onClick={() => setShowEmoji(!showEmoji)} />
+            </div>
+          </div>
+
+          {showEmoji && (
+            <div className="emoji-popover">
+              <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
+            </div>
+          )}
+
+          
+        </div>
+        {fullscreen && <div className="compose-overlay" onClick={toggleFullscreen} />}
+    </>
+
   );
 }
