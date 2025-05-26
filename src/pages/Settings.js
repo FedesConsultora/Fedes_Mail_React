@@ -36,8 +36,6 @@ export default function Settings() {
         telefono_personal: data.telefono_personal
       });
 
-      await api.actualizarFirma({ firma_html: data.firma_html });
-
       const nuevoUsuario = await api.obtenerUsuarioActual();
 
       setData(prev => ({
