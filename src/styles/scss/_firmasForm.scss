@@ -1,11 +1,12 @@
 .firma-form {
   .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
 
     label {
       display: block;
       font-weight: 500;
       margin-bottom: 0.5rem;
+      color: #444;
     }
 
     input,
@@ -31,23 +32,36 @@
     }
   }
 
-  .guardar-btn {
+  .btn-group {
+    display: flex;
+    gap: 1rem;
     margin-top: 1rem;
-    padding: 0.6rem 1.2rem;
-    background: #42718a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+    align-items: center;
 
-    &:hover {
-      background: darken(#42718a, 8%);
+    .guardar-btn,
+    .regenerar-btn {
+      padding: 0.6rem 1.2rem;
+      background: #42718a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+
+      &:hover {
+        background: darken(#42718a, 8%);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
     }
   }
 
   .mensaje {
-    margin-top: 0.5rem;
+    margin-top: 1rem;
     font-size: 0.95rem;
     color: #444;
   }
@@ -66,6 +80,10 @@
       background: #f8f9fa;
       border: 1px dashed #ccc;
       border-radius: 6px;
+
+      * {
+        font-family: 'Arial', sans-serif;
+      }
     }
   }
 }

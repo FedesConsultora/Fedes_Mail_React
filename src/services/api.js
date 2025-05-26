@@ -330,7 +330,31 @@ const api = {
     });
     return await ensure(res);
   },
+  async actualizarDatosUsuario(datos) {
+    const res = await fetch(`${apiBase}/actualizar_datos_usuario`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify(datos),
+    });
+    const data = await toJson(res);
+    return data?.status === 'ok'
+      ? ok()
+      : { success: false, error: data?.mensaje || 'Error al actualizar datos' };
+  },
 
+  async regenerarFirma() {
+    const res = await fetch(`${apiBase}/regenerar_firma`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials,
+      body: JSON.stringify({}),
+    });
+    const data = await toJson(res);
+    return data?.status === 'ok'
+      ? { success: true, firma_html: data.firma_html }
+      : { success: false, error: data?.mensaje || 'Error al regenerar firma' };
+  },
 };
 
 export default api;

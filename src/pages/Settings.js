@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Loader from '../components/Loader';
 import FirmaForm from '../components/FirmaForm';
 import { useUser } from '../contexts/UserContext';
+import { useToast } from '../contexts/ToastContext';
+import api from '../services/api'; // asegurate de tener el método regenerarFirma en api.js
 
 export default function Settings() {
   const { user, loading } = useUser();
+  const { showToast } = useToast();
   const [tab, setTab] = useState('firma');
-  const [mensaje, setMensaje] = useState('');
   const [data, setData] = useState(null);
+  const [cargandoFirma, setCargandoFirma] = useState(false);
 
-  // Preparo data local una vez que carga el usuario
   useEffect(() => {
     if (user) {
       setData({
@@ -26,19 +28,26 @@ export default function Settings() {
     setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const guardarCambios = () => {
-    setMensaje('');
-    fetch('/FedesMail/api/actualizar_firma', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-      .then(res => res.json())
-      .then(res => {
-        if (res.status === 'ok') setMensaje('✅ Cambios guardados correctamente.');
-        else setMensaje('❌ Hubo un error al guardar.');
-      })
-      .catch(() => setMensaje('❌ Error de conexión al guardar.'));
+  const guardarCambios = async () => {
+    try {
+      await api.actualizarFirma(data);
+      showToast({ message: '✅ Cambios guardados correctamente.', type: 'success' });
+    } catch (err) {
+      showToast({ message: '❌ Error al guardar cambios.', type: 'error' });
+    }
+  };
+
+  const regenerarFirma = async () => {
+    setCargandoFirma(true);
+    try {
+      const res = await api.regenerarFirma();
+      setData(prev => ({ ...prev, firma_html: res.firma_html || '' }));
+      showToast({ message: '✅ Firma HTML actualizada.', type: 'success' });
+    } catch (err) {
+      showToast({ message: '❌ Error al regenerar firma.', type: 'error' });
+    } finally {
+      setCargandoFirma(false);
+    }
   };
 
   if (loading || !data) return <Loader message="Cargando ajustes…" />;
@@ -59,7 +68,8 @@ export default function Settings() {
             data={data}
             onChange={handleChange}
             onSave={guardarCambios}
-            mensaje={mensaje}
+            regenerarFirma={regenerarFirma}
+            cargandoFirma={cargandoFirma}
           />
         )}
       </div>

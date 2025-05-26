@@ -117,7 +117,10 @@ export default function ReplyComposer({ onClose, data, onSuccess  }) {
           <ComposeModal
             className={wasMinimized ? 'embedded restore-animation' : 'embedded'}
             modo="respuesta"
-            initialData={{ ...data, body: '' }} // cuerpo limpio para no duplicar HTML
+            initialData={{
+              ...data,
+              body: ('') + (user?.firma_html ? `<br/><br/>${user.firma_html}` : '')
+            }}
             preloadedFiles={preloaded}
             onSend={handleSend}
             onClose={onClose}

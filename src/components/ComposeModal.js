@@ -4,64 +4,73 @@ import {
   FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt
 } from 'react-icons/fa';
 import { IoMdHappy } from 'react-icons/io';
-import Picker  from '@emoji-mart/react';
-import data    from '@emoji-mart/data';
-import api     from '../services/api';
+import Picker from '@emoji-mart/react';
+import data from '@emoji-mart/data';
+import api from '../services/api';
 import { useToast } from '../contexts/ToastContext';
+import { useUser } from '../contexts/UserContext';
 
 const MAX_MB = 25;
-const MAX_B  = MAX_MB * 1024 * 1024;
+const MAX_B = MAX_MB * 1024 * 1024;
 
 export default function ComposeModal({
   onClose,
   initialData = {},
   modo = 'modal',
   onSend = null,
-  preloadedFiles = []
+  preloadedFiles = [],
 }) {
   const hasInitialized = useRef(false);
+  const { showToast } = useToast();
+  const { user } = useUser();
+  const textareaRef = useRef();
+
   const [form, setForm] = useState({
     to: initialData.to || '',
     cc: '',
     cco: '',
     subject: initialData.subject || '',
-    body: '' // cuerpo limpio
+    body: '',
   });
 
   const [showCc, setShowCc] = useState(false);
   const [showCco, setShowCco] = useState(false);
   const [files, setFiles] = useState([]);
-  const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
-
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
-  const textareaRef = useRef();
-  const { showToast } = useToast();
+  const [incluirFirma, setIncluirFirma] = useState(() =>
+    localStorage.getItem('firma_activa') !== 'false'
+  );
+  const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
+
   const isReply = modo === 'respuesta';
 
   const change = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   useEffect(() => {
     if (!hasInitialized.current) {
+      const firma = incluirFirma && user?.firma_html ? `<br/><br/>${user.firma_html}` : '';
       setForm({
         to: initialData.to || '',
         cc: initialData.cc || '',
         cco: initialData.cco || '',
         subject: initialData.subject || '',
-        body: '' // inicialmente vacío
+        body: (initialData.body || '') + firma,
       });
       setShowCc(!!initialData.cc);
       setShowCco(!!initialData.cco);
       setFiles([]);
       hasInitialized.current = true;
     }
-  }, [initialData]);
+  }, [initialData, incluirFirma, user?.firma_html]);
 
   useEffect(() => {
     if (!preloadedFiles.length) return;
-    setFiles(prev => [...prev, ...preloadedFiles.filter(
-      p => !prev.some(f => f.file.name === p.file.name && f.file.size === p.file.size)
-    )]);
+    setFiles(prev =>
+      [...prev, ...preloadedFiles.filter(
+        p => !prev.some(f => f.file.name === p.file.name && f.file.size === p.file.size)
+      )]
+    );
   }, [preloadedFiles]);
 
   const prevent = e => e.preventDefault();
@@ -141,6 +150,23 @@ export default function ComposeModal({
     });
   };
 
+  const quitarFirmaDelBody = () => {
+    if (!user?.firma_html) return form.body;
+    const firmaRegex = new RegExp(`<br/><br/>${user.firma_html.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+    return form.body.replace(firmaRegex, '');
+  };
+
+  const handleFirmaToggle = e => {
+    const checked = e.target.checked;
+    setIncluirFirma(checked);
+    localStorage.setItem('firma_activa', checked);
+    setForm(prev => ({
+      ...prev,
+      body: checked && user?.firma_html
+        ? quitarFirmaDelBody() + `<br/><br/>${user.firma_html}`
+        : quitarFirmaDelBody()
+    }));
+  };
   return (
     <div
       className={`compose-modal ${modo === 'respuesta' ? 'embedded' : ''}`}
@@ -167,6 +193,14 @@ export default function ComposeModal({
         {showCc && <input name="cc" placeholder="CC" value={form.cc} onChange={change} />}
         {showCco && <input name="cco" placeholder="CCO" value={form.cco} onChange={change} />}
         <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
+      </div>
+
+      {/* Firma toggle */}
+      <div className="firma-toggle">
+        <label>
+          <input type="checkbox" checked={incluirFirma} onChange={handleFirmaToggle} />
+          Incluir firma
+        </label>
       </div>
 
       <textarea
