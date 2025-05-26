@@ -5,54 +5,59 @@ import { useUser } from '../contexts/UserContext';
 import { FaTimes, FaMinus, FaWindowMaximize, FaReply, FaShare } from 'react-icons/fa';
 import api from '../services/api';
 
-export default function ReplyComposer({ onClose, data, onSuccess  }) {
-    const { showToast } = useToast();
-    const { user } = useUser();
+export default function ReplyComposer({ onClose, data, onSuccess }) {
+  const { showToast } = useToast();
+  const { user } = useUser();
 
-    const [preloaded, setPreloaded] = useState([]);
-    const [minimized, setMinimized] = useState(false);
-    const [wasMinimized, setWasMinimized] = useState(false);
+  const [preloaded, setPreloaded] = useState([]);
+  const [minimized, setMinimized] = useState(false);
+  const [wasMinimized, setWasMinimized] = useState(false);
+  const [mostrarFirma, setMostrarFirma] = useState(true);
 
-    const isReply = data?.tipo === 'respuesta';
-    const isForward = data?.tipo === 'reenviar';
+  const isReply = data?.tipo === 'respuesta';
+  const isForward = data?.tipo === 'reenviar';
 
-    const handleSend = async ({ to, cc, cco, subject, body, attachments }) => {
-        const { success, error } = await api.enviarCorreo({
-          to,
-          cc,
-          cco,
+  const handleSend = async ({ to, cc, cco, subject, body, attachments }) => {
+    const { success, error } = await api.enviarCorreo({
+      to,
+      cc,
+      cco,
+      subject,
+      html: body,
+      text: body,
+      attachments,
+      tipo: data.tipo,
+      responde_a_id: data.responde_a_id,
+    });
+
+    if (success) {
+      showToast({ message: '📨 Correo enviado', type: 'success' });
+
+      if (typeof onSuccess === 'function') {
+        const now = new Date();
+        onSuccess({
+          id: Math.floor(Math.random() * 1000000),
           subject,
-          html: body,
-          text: body,
-          attachments,
-          tipo: data.tipo,
-          responde_a_id: data.responde_a_id,
+          body,
+          senderEmail: user.email,
+          senderName: user.nombre,
+          recipients: to,
+          date: now.toLocaleString('es-AR', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          }),
+          avatar: user.imagen_avatar
+            ? `data:image/jpeg;base64,${user.imagen_avatar}`
+            : undefined,
+          attachments: [],
         });
+      }
 
-        if (success) {
-            showToast({ message: '📨 Correo enviado', type: 'success' });
-
-            if (typeof onSuccess === 'function') {
-            const now = new Date();
-            onSuccess({
-                id: Math.floor(Math.random() * 1000000), // si no tenés el ID real, podés usar uno temporal
-                subject,
-                body,
-                senderEmail: user.email,
-                senderName: user.nombre,
-                recipients: to,
-                date: now.toLocaleString('es-AR', { dateStyle: 'medium', timeStyle: 'short' }),
-                avatar: user.imagen_avatar ? `data:image/jpeg;base64,${user.imagen_avatar}` : undefined,
-                attachments: [],
-            });
-            }
-
-            onClose();
-        } else {
-            showToast({ message: `❌ ${error}`, type: 'error' });
-        }
-    };
-
+      onClose();
+    } else {
+      showToast({ message: `❌ ${error}`, type: 'error' });
+    }
+  };
 
   useEffect(() => {
     if (!data?.attachments?.length) return;
@@ -72,7 +77,7 @@ export default function ReplyComposer({ onClose, data, onSuccess  }) {
     })();
   }, [data]);
 
-  const blobToB64 = (blob) =>
+  const blobToB64 = blob =>
     new Promise(res => {
       const r = new FileReader();
       r.onload = () => res(r.result.split(',')[1]);
@@ -102,7 +107,7 @@ export default function ReplyComposer({ onClose, data, onSuccess  }) {
           </div>
         </div>
         <h3>{data.subject || '(Sin asunto)'}</h3>
-        <div className='iconosComposer'>
+        <div className="iconosComposer">
           <button className="icon-btn" onClick={toggleMinimize} title="Minimizar / Restaurar">
             {minimized ? <FaWindowMaximize /> : <FaMinus />}
           </button>
@@ -119,12 +124,29 @@ export default function ReplyComposer({ onClose, data, onSuccess  }) {
             modo="respuesta"
             initialData={{
               ...data,
-              body: ('') + (user?.firma_html ? `<br/><br/>${user.firma_html}` : '')
+              body: data.body || '',
             }}
             preloadedFiles={preloaded}
             onSend={handleSend}
             onClose={onClose}
+            mostrarFirma={mostrarFirma}
+            setMostrarFirma={setMostrarFirma}
           />
+
+          {/* Firma renderizada (toggleable) */}
+          {user?.firma_html && mostrarFirma && (
+            <div
+              className="firma-render"
+              dangerouslySetInnerHTML={{ __html: user.firma_html }}
+              style={{
+                margin: '1rem 1.5rem',
+                paddingTop: '0.75rem',
+                borderTop: '1px dashed #ccc',
+                fontSize: '0.85rem',
+              }}
+            />
+          )}
+
           {data.body && (
             <div className="original-message-preview scrollable-html">
               <div dangerouslySetInnerHTML={{ __html: data.body }} />

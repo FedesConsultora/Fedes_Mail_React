@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  FaTimes, FaWindowMinimize, FaExpand,
+  FaTimes, FaWindowMinimize, FaExpand, FaCompress,
   FaPaperclip, FaFilePdf, FaFileImage, FaFileAlt
 } from 'react-icons/fa';
 import { IoMdHappy } from 'react-icons/io';
@@ -26,10 +26,10 @@ export default function ComposeModal({
   const textareaRef = useRef();
 
   const [form, setForm] = useState({
-    to: initialData.to || '',
+    to: '',
     cc: '',
     cco: '',
-    subject: initialData.subject || '',
+    subject: '',
     body: '',
   });
 
@@ -38,31 +38,29 @@ export default function ComposeModal({
   const [files, setFiles] = useState([]);
   const [showEmoji, setShowEmoji] = useState(false);
   const [sending, setSending] = useState(false);
-  const [incluirFirma, setIncluirFirma] = useState(() =>
-    localStorage.getItem('firma_activa') !== 'false'
-  );
-  const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
+  const [firmaVisible, setFirmaVisible] = useState(() => localStorage.getItem('firma_activa') !== 'false');
+  const [fullscreen, setFullscreen] = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
+  const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
   const isReply = modo === 'respuesta';
 
   const change = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   useEffect(() => {
     if (!hasInitialized.current) {
-      const firma = incluirFirma && user?.firma_html ? `<br/><br/>${user.firma_html}` : '';
       setForm({
         to: initialData.to || '',
         cc: initialData.cc || '',
         cco: initialData.cco || '',
         subject: initialData.subject || '',
-        body: (initialData.body || '') + firma,
+        body: initialData.body || '',
       });
       setShowCc(!!initialData.cc);
       setShowCco(!!initialData.cco);
-      setFiles([]);
       hasInitialized.current = true;
     }
-  }, [initialData, incluirFirma, user?.firma_html]);
+  }, [initialData]);
 
   useEffect(() => {
     if (!preloadedFiles.length) return;
@@ -124,7 +122,7 @@ export default function ComposeModal({
       cc: form.cc,
       cco: form.cco,
       subject: form.subject,
-      html: form.body,
+      html: form.body + (firmaVisible && user?.firma_html ? `<br/><br/>${user.firma_html}` : ''),
       text: form.body,
       attachments,
       tipo: 'nuevo'
@@ -150,26 +148,37 @@ export default function ComposeModal({
     });
   };
 
-  const quitarFirmaDelBody = () => {
-    if (!user?.firma_html) return form.body;
-    const firmaRegex = new RegExp(`<br/><br/>${user.firma_html.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
-    return form.body.replace(firmaRegex, '');
+  const toggleFirma = () => {
+    const nuevoValor = !firmaVisible;
+    setFirmaVisible(nuevoValor);
+    localStorage.setItem('firma_activa', nuevoValor);
   };
 
-  const handleFirmaToggle = e => {
-    const checked = e.target.checked;
-    setIncluirFirma(checked);
-    localStorage.setItem('firma_activa', checked);
-    setForm(prev => ({
-      ...prev,
-      body: checked && user?.firma_html
-        ? quitarFirmaDelBody() + `<br/><br/>${user.firma_html}`
-        : quitarFirmaDelBody()
-    }));
+  const toggleFullscreen = () => {
+    setFullscreen(!fullscreen);
+    setMinimized(false);
   };
+
+  const toggleMinimize = () => {
+    setMinimized(true);
+    setFullscreen(false);
+  };
+
+  if (minimized) {
+    return (
+      <div className="compose-tab-minimized">
+        <span>Nuevo mensaje</span>
+        <div>
+          <FaExpand title="Expandir" onClick={toggleFullscreen} />
+          <FaTimes onClick={onClose} title="Cerrar" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`compose-modal ${modo === 'respuesta' ? 'embedded' : ''}`}
+      className={`compose-modal ${isReply ? 'embedded' : ''} ${fullscreen ? 'fullscreen' : ''}`}
       onDragOver={prevent}
       onDrop={onDrop}
     >
@@ -177,8 +186,10 @@ export default function ComposeModal({
         <div className="header">
           <span>Mensaje nuevo</span>
           <div className="header-actions">
-            <FaWindowMinimize title="Minimizar" />
-            <FaExpand title="Expandir" />
+            <FaWindowMinimize onClick={toggleMinimize} title="Minimizar" />
+            {fullscreen
+              ? <FaCompress title="Restaurar" onClick={toggleFullscreen} />
+              : <FaExpand title="Expandir" onClick={toggleFullscreen} />}
             <FaTimes onClick={onClose} title="Cerrar" />
           </div>
         </div>
@@ -195,14 +206,6 @@ export default function ComposeModal({
         <input name="subject" placeholder="Asunto" value={form.subject} onChange={change} />
       </div>
 
-      {/* Firma toggle */}
-      <div className="firma-toggle">
-        <label>
-          <input type="checkbox" checked={incluirFirma} onChange={handleFirmaToggle} />
-          Incluir firma
-        </label>
-      </div>
-
       <textarea
         ref={textareaRef}
         name="body"
@@ -210,6 +213,24 @@ export default function ComposeModal({
         value={form.body}
         onChange={change}
       />
+
+      <div className="firma-html-toggle">
+        <button
+          type="button"
+          className={`firma-icon-btn ${firmaVisible ? 'active' : ''}`}
+          onClick={toggleFirma}
+          title={firmaVisible ? 'Quitar firma' : 'Agregar firma'}
+        >
+          ✒️
+        </button>
+      </div>
+
+      {firmaVisible && user?.firma_html && (
+        <div
+          className="firma-preview-html"
+          dangerouslySetInnerHTML={{ __html: user.firma_html }}
+        />
+      )}
 
       {files.length > 0 && (
         <div className="attachments-preview">
@@ -259,6 +280,8 @@ export default function ComposeModal({
           <Picker data={data} onEmojiSelect={insertEmoji} theme="light" />
         </div>
       )}
+
+      {fullscreen && <div className="compose-overlay" onClick={toggleFullscreen} />}
     </div>
   );
 }

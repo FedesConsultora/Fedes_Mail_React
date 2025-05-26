@@ -48,15 +48,13 @@ export default function FirmaForm({ data, onChange, onSave, readonly = false }) 
       </div>
 
       <div className="form-group">
-        <label>Firma HTML</label>
-        <textarea
-          name="firma_html"
-          value={data.firma_html}
-          onChange={onChange}
-          disabled={true}
-          rows={8}
-          placeholder="Aquí va tu firma"
-        />
+        <div className="firma-preview">
+            <label>Firma HTML</label>
+            <div
+                className="firma-render"
+                dangerouslySetInnerHTML={{ __html: data.firma_html }}
+            />
+        </div>
       </div>
 
       {!readonly && (

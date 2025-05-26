@@ -1,7 +1,3 @@
-/* ──────────────────────────────────────────────
-   Componente ReplyComposer – Estilos embebidos
-────────────────────────────────────────────── */
-
 .reply-composer-wrapper {
   margin-top: 2.5rem;
   width: 100%;
@@ -61,9 +57,11 @@
       max-width: 60vw;
       padding-left: 1rem;
     }
-    .iconosComposer{
+
+    .iconosComposer {
       display: flex;
     }
+
     .icon-btn {
       background: none;
       border: none;
@@ -85,8 +83,6 @@
 
   .compose-modal.embedded {
     position: static;
-    inset: auto;
-    transform: none;
     width: 100%;
     max-width: 100%;
     box-shadow: none;
@@ -137,25 +133,113 @@
 
       .send-btn {
         background: #42718a;
-        box-shadow: 0 1px 0 rgba(60, 64, 67, 0.3);
-        transition: background 0.15s;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 1.5rem;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
 
         &:hover {
           background: #295369;
         }
       }
 
-      .footer-icons svg {
-        font-size: 1.25rem;
+      .footer-icons {
+        display: flex;
+        gap: 0.75rem;
+
+        svg {
+          font-size: 1.25rem;
+          cursor: pointer;
+          color: #555;
+          transition: color 0.2s;
+
+          &:hover {
+            color: #222;
+          }
+        }
+      }
+    }
+
+    .firma-html-toggle {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 1.5rem;
+
+      .firma-icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 0.3rem;
+        transition: all 0.2s ease;
+        color: #555;
+
+        &.active {
+          color: #42718a;
+        }
+
+        &:hover {
+          color: #1a73e8;
+        }
+      }
+    }
+
+    .firma-preview-html {
+      padding: 0 1.5rem 1rem;
+      font-size: 0.85rem;
+      color: #444;
+
+      * {
+        max-width: 100%;
       }
     }
 
     .attachments-preview {
       background: #fafafa;
       border-top: 1px solid #eee;
+      padding: 0.5rem 1.5rem;
+      font-size: 0.85rem;
 
-      .att-chip .rm-btn:hover {
-        color: #d93025;
+      .att-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #333;
+
+        svg {
+          font-size: 0.95rem;
+        }
+
+        .filename {
+          text-decoration: none;
+          color: #1a73e8;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+
+        .size {
+          color: #777;
+        }
+
+        .rm-btn {
+          margin-left: auto;
+          cursor: pointer;
+          color: #888;
+
+          &:hover {
+            color: #d93025;
+          }
+        }
+      }
+
+      .total {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #555;
       }
     }
   }
@@ -180,93 +264,14 @@
       border-collapse: collapse;
     }
 
-    td, th {
+    td,
+    th {
       padding: 0.25rem 0.5rem;
     }
 
     a {
       color: #1a73e8;
     }
-  }
-}
-
-.reply-forward-wrapper {
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  pointer-events: none;
-
-  &.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .action-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-
-    &:active {
-      transform: scale(0.97);
-    }
-  }
-
-  .reply {
-    background-color: #eaf1fb;
-    color: #1a73e8;
-
-    &:hover {
-      background-color: #d2e3fc;
-    }
-  }
-
-  .forward {
-    background-color: #f1f3f4;
-    color: #444;
-
-    &:hover {
-      background-color: #e0e0e0;
-    }
-  }
-}
-
-.compose-modal.embedded.restore-animation {
-  animation: fadeInUp 0.3s ease;
-}
-
-.original-message-preview {
-  max-height: 280px;
-  overflow: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  margin: 1rem 1.25rem;
-  padding: 1rem 1.5rem;
-  background: #f1f3f4;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 4px;
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0.5rem 0;
-  }
-
-  a {
-    word-break: break-all;
   }
 }
 
