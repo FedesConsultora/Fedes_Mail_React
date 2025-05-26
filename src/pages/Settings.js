@@ -30,7 +30,22 @@ export default function Settings() {
 
   const guardarCambios = async () => {
     try {
-      await api.actualizarFirma(data);
+      await api.actualizarDatosUsuario({
+        nombre_completo: data.nombre_completo,
+        puesto: data.puesto,
+        equipo_trabajo: data.equipo_trabajo,
+        telefono_personal: data.telefono_personal
+      });
+
+      await api.actualizarFirma({ firma_html: data.firma_html });
+      const nuevoUsuario = await api.obtenerUsuarioActual();
+      setData({
+        firma_html: nuevoUsuario.firma_html || '',
+        nombre_completo: nuevoUsuario.nombre_completo || '',
+        puesto: nuevoUsuario.puesto || '',
+        equipo_trabajo: nuevoUsuario.equipo_trabajo || '',
+        telefono_personal: nuevoUsuario.telefono_personal || ''
+      });
       showToast({ message: '✅ Cambios guardados correctamente.', type: 'success' });
     } catch (err) {
       showToast({ message: '❌ Error al guardar cambios.', type: 'error' });
