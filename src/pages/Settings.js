@@ -1,41 +1,30 @@
-// src/pages/Settings.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Loader from '../components/Loader';
 import FirmaForm from '../components/FirmaForm';
+import { useUser } from '../contexts/UserContext';
 
 export default function Settings() {
+  const { user, loading } = useUser();
   const [tab, setTab] = useState('firma');
-  const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState('');
-  const [data, setData] = useState({
-    firma_html: '',
-    nombre_completo: '',
-    puesto: '',
-    equipo_trabajo: '',
-    telefono_personal: ''
-  });
+  const [data, setData] = useState(null);
 
+  // Preparo data local una vez que carga el usuario
   useEffect(() => {
-    fetch('/FedesMail/api/usuario_actual', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-      .then(res => res.json())
-      .then(user => {
-        setData({
-          firma_html: user.firma_html || '',
-          nombre_completo: user.nombre_completo || '',
-          puesto: user.puesto || '',
-          equipo_trabajo: user.equipo_trabajo || '',
-          telefono_personal: user.telefono_personal || ''
-        });
-        setLoading(false);
-      })
-      .catch(() => {
-        setMensaje('⚠️ Error al cargar la configuración');
-        setLoading(false);
+    if (user) {
+      setData({
+        firma_html: user.firma_html || '',
+        nombre_completo: user.nombre_completo || '',
+        puesto: user.puesto || '',
+        equipo_trabajo: user.equipo_trabajo || '',
+        telefono_personal: user.telefono_personal || ''
       });
-  }, []);
+    }
+  }, [user]);
+
+  const handleChange = (e) => {
+    setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const guardarCambios = () => {
     setMensaje('');
@@ -52,11 +41,7 @@ export default function Settings() {
       .catch(() => setMensaje('❌ Error de conexión al guardar.'));
   };
 
-  const handleChange = (e) => {
-    setData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  if (loading) return <Loader message="Cargando ajustes…" />;
+  if (loading || !data) return <Loader message="Cargando ajustes…" />;
 
   return (
     <div className="settings-container">
@@ -66,7 +51,6 @@ export default function Settings() {
         <button className={tab === 'firma' ? 'active' : ''} onClick={() => setTab('firma')}>
           ✍️ Firma
         </button>
-        {/* Otros tabs en el futuro */}
       </div>
 
       <div className="settings-content">
