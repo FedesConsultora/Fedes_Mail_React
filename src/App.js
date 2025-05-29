@@ -1,5 +1,4 @@
 // App.js
-import React from 'react';
 import './styles/scss/main.scss';
 import AppRouter from './routes/AppRouter';
 import UserProvider, { useUser } from './contexts/UserContext';
