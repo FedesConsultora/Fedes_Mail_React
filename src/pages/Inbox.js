@@ -4,7 +4,7 @@ import MailboxLayout from '../layouts/MailboxLayout';
 import api from '../services/api';
 import { useUser } from '../contexts/UserContext';
 import { useToast } from '../contexts/ToastContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import NoMails from '../components/NoMails';
 
@@ -12,7 +12,7 @@ export default function Inbox() {
   const { user } = useUser();
   const { showToast } = useToast();
   const location = useLocation();
-
+  const nav = useNavigate();
   const [mails, setMails] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +21,13 @@ export default function Inbox() {
 
   const mailsPerPage = 50;
   const currentFolder = location.pathname.includes('/trash') ? 'trash' : 'inbox';
+
+  useEffect(() => {
+    if (location.state?.refreshInbox) {
+      forzarActualizacion();
+      nav(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, nav]);
 
   useEffect(() => {
     if (!user?.email) return;
@@ -170,6 +177,28 @@ export default function Inbox() {
     () => Math.ceil(totalMails / mailsPerPage),
     [totalMails]
   );
+  const restaurarSeleccionados = async (ids) => {
+    if (!ids.length) return;
+
+    try {
+      const res = await api.restoreMails({ mail_ids: ids });
+
+      if (res?.restored > 0) {
+        setMails((curr) => curr.filter((m) => !ids.includes(m.id)));
+        setSelectedIds([]);
+        setTotalMails((prev) => Math.max(prev - res.restored, 0));
+        showToast({ message: `♻️ ${res.restored} correo(s) restaurados`, type: 'success' });
+
+        // Opcional: actualizá el inbox inmediatamente.
+        await forzarActualizacion();
+      } else {
+        showToast({ message: '⚠️ No se restauraron correos', type: 'info' });
+      }
+    } catch (err) {
+      console.error('❌ Error al restaurar:', err);
+      showToast({ message: '❌ Error al restaurar correos.', type: 'error' });
+    }
+  };
 
   const toggleSelectAll = () => {
     setSelectedIds((prev) =>
@@ -199,6 +228,7 @@ export default function Inbox() {
       onToggleRead={toggleLecturaSeleccionados}
       onPrevPage={() => setCurrentPage((p) => Math.max(p - 1, 1))}
       onNextPage={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+      onRestoreSelected={restaurarSeleccionados}
     >
       {mails.length > 0 ? (
         mails.map((mail) =>

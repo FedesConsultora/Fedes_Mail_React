@@ -28,7 +28,7 @@ export default function InboxToolbar({
   onNextPage,
   onReload,
   onDeleteMultiple,
-  onRestoreSelected // 👈 debe venir como prop desde Trash.jsx
+  onRestoreSelected 
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const checkboxRef = useRef(null);

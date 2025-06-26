@@ -356,7 +356,18 @@ const api = {
     return data?.status === 'ok'
       ? ok()
       : { success: false, error: data?.mensaje || 'Error al actualizar firma' };
-  }
+  },
+  async obtenerSugerencias(q = '') {
+    // en local podés mockear si querés
+    if (mock) return [];        // ó devolver un mock estático
+
+    const url = new URL(`${apiBase}/suggestions`, window.location.origin);
+    if (q) url.searchParams.set('q', q);
+
+    const res   = await fetch(url, { method:'GET', credentials });
+    const lista = await ensure(res);      // backend ya tira array plano
+    return lista;                         // [{name,email}, …]
+  },
 };
 
 export default api;

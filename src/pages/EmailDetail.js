@@ -125,8 +125,20 @@ export default function EmailDetail() {
   };
 
   const restoreFromTrash = async () => {
-    try { await api.restoreMails([rootMail.id]); nav('/'); }
-    catch { showToast({ message: '❌ No se pudo restaurar', type: 'error' }); }
+    try { 
+      const res = await api.restoreMails([rootMail.id]);
+
+      if (res.restored > 0) {
+        showToast({ message: '♻️ Correo restaurado correctamente', type: 'success' });
+        nav('/', { state: { refreshInbox: true } });
+
+      } else {
+        showToast({ message: '⚠️ No se restauró ningún correo', type: 'info' });
+      }
+    } catch (err) { 
+      console.error('❌ Error al restaurar correo:', err);
+      showToast({ message: '❌ No se pudo restaurar', type: 'error' }); 
+    }
   };
 
   const removeFromSpam = () => {
@@ -237,10 +249,10 @@ export default function EmailDetail() {
       <h4>Archivos adjuntos</h4>
       <div className="attachments-list">
         {list.map((att, i) => (
-          <a key={i} className="attachment-item" href={att.preview} download={att.name} rel="noopener noreferrer">
+          <a key={i} className="attachment-item" href={att.preview} download={att.nombre}>
             <div className="attachment-icon">{iconByMime(att.mimetype)}</div>
             <div className="attachment-info">
-              <span className="attachment-name">{att.name}</span>
+              <span className="attachment-name">{att.nombre}</span>
               <span className="attachment-size">{fmtSize(att.size)}</span>
             </div>
           </a>

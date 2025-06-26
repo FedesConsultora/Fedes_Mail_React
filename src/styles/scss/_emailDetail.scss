@@ -145,8 +145,9 @@
   /* —— cuerpo del mail —— */
   .email-body {
     margin-top: 1rem;
+    white-space: break-spaces;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.5;
     color: $text;
     ul { padding-left: 1.2rem; }
     p  { margin-bottom: 1rem; }

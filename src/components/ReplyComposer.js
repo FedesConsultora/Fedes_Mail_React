@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContext';
 import { useUser } from '../contexts/UserContext';
 import { FaTimes, FaMinus, FaWindowMaximize, FaReply, FaShare } from 'react-icons/fa';
 import api from '../services/api';
+import { textToHtml } from '../utils/textToHtml';
+
 
 export default function ReplyComposer({ onClose, data, onSuccess }) {
   const { showToast } = useToast();
@@ -18,12 +20,15 @@ export default function ReplyComposer({ onClose, data, onSuccess }) {
   const isForward = data?.tipo === 'reenviar';
 
   const handleSend = async ({ to, cc, cco, subject, body, attachments }) => {
+    const htmlFinal = textToHtml(body) + 
+      (!mostrarFirma && user?.firma_html ? `<br/><br/>${user.firma_html}` : '');
+
     const { success, error } = await api.enviarCorreo({
       to,
       cc,
       cco,
       subject,
-      html: body,
+      html: htmlFinal,
       text: body,
       attachments,
       tipo: data.tipo,
